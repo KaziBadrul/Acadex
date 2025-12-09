@@ -49,19 +49,22 @@ export default function AuthForm() {
   };
 
   return (
-    <div className="flex flex-col space-y-4 max-w-sm mx-auto p-8 border rounded-lg shadow-xl">
-      <h2 className="text-3xl font-bold text-center">
-        {view === "sign-in" ? "Sign In to Acadex" : "Create an Account"}
+    <div className="flex flex-col space-y-6 max-w-sm mx-auto p-10 bg-white rounded-2xl shadow-2xl border border-gray-100 transition duration-300 hover:shadow-3xl">
+      <h2 className="text-3xl font-extrabold text-center text-gray-900 tracking-tight">
+        {view === "sign-in" ? "Welcome Back" : "Start Your Acadex Journey"}
       </h2>
+      <p className="text-center text-sm text-gray-700">
+        {view === "sign-in" ? "Sign in to access your notes and resources." : "Create your free account in seconds."}
+      </p>
 
-      <form onSubmit={handleAuth} className="flex flex-col space-y-4">
+      <form onSubmit={handleAuth} className="flex flex-col space-y-5 text-black ">
         <input
           type="email"
-          placeholder="Email"
+          placeholder="Email Address"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          className="p-3 border rounded"
+          className="p-3 border border-gray-300 text-black rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition duration-150"
         />
         <input
           type="password"
@@ -69,33 +72,33 @@ export default function AuthForm() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
-          className="p-3 border rounded"
+          className="p-3 border border-gray-300 text-black rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition duration-150"
         />
         <button
           type="submit"
           disabled={loading}
-          className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded"
+          className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg shadow-md transition duration-200 ease-in-out transform hover:scale-[1.01] disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {view === "sign-in" ? "Sign In" : "Sign Up"}
+          {view === "sign-in" ? "Sign In Securely" : "Create Account"}
         </button>
       </form>
 
-      <p className="text-center text-sm text-gray-600 mt-2">
+      <p className="text-center text-sm text-gray-700">
         {view === "sign-in" ? (
           <>
-            Do not have an account?{" "}
+            New to Acadex?{" "}
             <button
-              className="text-blue-600 hover:underline"
+              className="text-blue-600 font-medium hover:text-blue-700 transition duration-150 hover:underline"
               onClick={() => setView("sign-up")}
             >
-              Sign Up
+              Sign Up Now
             </button>
           </>
         ) : (
           <>
-            Already have an account?{" "}
+            Have an account?{" "}
             <button
-              className="text-blue-600 hover:underline"
+              className="text-blue-600 font-medium hover:text-blue-700 transition duration-150 hover:underline"
               onClick={() => setView("sign-in")}
             >
               Sign In
@@ -106,10 +109,10 @@ export default function AuthForm() {
 
       {message && (
         <p
-          className={`text-center mt-4 p-2 rounded ${
+          className={`text-center mt-4 p-3 rounded-lg border font-medium ${
             message.includes("Error")
-              ? "bg-red-100 text-red-700"
-              : "bg-green-100 text-green-700"
+              ? "bg-red-50 text-red-700 border-red-300"
+              : "bg-green-50 text-green-700 border-green-300"
           }`}
         >
           {message}

@@ -65,18 +65,19 @@ export default function NoteForm() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="p-8 max-w-4xl mx-auto space-y-6 bg-white shadow-lg rounded-xl mt-8"
+      // Modern styling: Larger padding, subtle background, rounded corners, significant shadow
+      className="p-10 max-w-5xl mx-auto space-y-8 bg-white border border-gray-100 shadow-2xl rounded-2xl mt-12 transition duration-300 hover:shadow-3xl"
     >
-      <h1 className="text-3xl font-bold text-center">
-        Create New Academic Note
+      <h1 className="text-4xl font-extrabold text-center text-gray-900 tracking-tight border-b pb-4">
+        ✍️ Create New Academic Note
       </h1>
 
       {message && (
         <div
-          className={`p-3 rounded text-center ${
+          className={`p-4 rounded-lg text-center font-medium border ${
             message.includes("Error")
-              ? "bg-red-100 text-red-700"
-              : "bg-green-100 text-green-700"
+              ? "bg-red-50 text-red-700 border-red-300"
+              : "bg-green-50 text-green-700 border-green-300"
           }`}
         >
           {message}
@@ -84,47 +85,54 @@ export default function NoteForm() {
       )}
 
       {/* Title */}
-      <div>
-        <label className="block text-gray-700 font-medium mb-1">Title</label>
+      <div className="text-black">
+        <label className="block text-gray-700 font-semibold mb-2">
+          Note Title
+        </label>
         <input
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           required
           placeholder="e.g., Dijkstra's Algorithm: A Simple Explanation"
-          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+          // Modern input styling: Deeper padding, better focus ring, smooth corners
+          className="w-full p-4 border border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition duration-150 shadow-sm"
         />
       </div>
 
       {/* Course and Topic */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-black">
         <div>
-          <label className="block text-gray-700 font-medium mb-1">Course</label>
+          <label className="block text-gray-700 font-semibold mb-2">
+            Course (e.g., CSE 4510)
+          </label>
           <input
             type="text"
             value={course}
             onChange={(e) => setCourse(e.target.value)}
             required
-            placeholder="e.g., CSE 4510"
-            className="w-full p-3 border border-gray-300 rounded-lg"
+            placeholder="Course Code"
+            className="w-full p-4 border border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition duration-150 shadow-sm"
           />
         </div>
-        <div>
-          <label className="block text-gray-700 font-medium mb-1">Topic</label>
+        <div className="text-black">
+          <label className="block text-gray-700 font-semibold mb-2">
+            Topic (e.g., Graph Theory)
+          </label>
           <input
             type="text"
             value={topic}
             onChange={(e) => setTopic(e.target.value)}
             required
-            placeholder="e.g., Graph Theory"
-            className="w-full p-3 border border-gray-300 rounded-lg"
+            placeholder="Specific Topic Name"
+            className="w-full p-4 border border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition duration-150 shadow-sm"
           />
         </div>
       </div>
 
       {/* Content (Markdown Editor Area) */}
       <div>
-        <label className="block text-gray-700 font-medium mb-1">
+        <label className="block text-gray-700 font-semibold mb-2">
           Content (Supports Markdown)
         </label>
         <textarea
@@ -132,26 +140,20 @@ export default function NoteForm() {
           onChange={(e) => setContent(e.target.value)}
           required
           rows={15}
-          placeholder="Start writing your note here using Markdown syntax for formatting..."
-          className="w-full p-3 border border-gray-300 rounded-lg font-mono resize-y focus:ring-2 focus:ring-blue-500"
+          placeholder="Start writing your note here using Markdown syntax for clear formatting (e.g., # Headings, **bold**, *italics*, lists)..."
+          // Styled for a cleaner writing experience
+          className="w-full p-5 border border-gray-300 rounded-xl font-mono text-gray-800 resize-y focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition duration-150 shadow-inner bg-gray-50"
         />
       </div>
-
-      {/* Preview Section (Optional, uncomment if installing ReactMarkdown) */}
-      {/* <div>
-        <label className="block text-gray-700 font-medium mb-1">Preview</label>
-        <div className="border p-4 bg-gray-50 rounded-lg prose max-w-none">
-          <ReactMarkdown rehypePlugins={[rehypeRaw]}>{content}</ReactMarkdown>
-        </div>
-      </div> */}
 
       {/* Submit Button */}
       <button
         type="submit"
         disabled={loading}
-        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition duration-200 disabled:bg-gray-400"
+        // Premium Button Styling: Brighter color, stronger shadow, subtle hover effect
+        className="w-full bg-blue-600 text-white font-extrabold py-4 rounded-xl shadow-lg hover:bg-blue-700 transition duration-300 ease-in-out transform hover:scale-[1.005] disabled:bg-gray-400 disabled:shadow-none"
       >
-        {loading ? "Publishing..." : "Publish Note"}
+        {loading ? "Publishing Note..." : "🚀 Publish Note to Acadex"}
       </button>
     </form>
   );

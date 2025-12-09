@@ -1,39 +1,42 @@
-// utils/supabase/server.ts
+// import { createServerClient, type CookieOptions } from "@supabase/ssr";
+// import { cookies } from "next/headers";
 
-import { createServerClient, type CookieOptions } from "@supabase/ssr";
-import { cookies } from "next/headers";
-// NOTE: Ensure your Database type is imported correctly here
-// import { Database } from '@/types/supabase'
+// export function createServer() {
+//   const cookieStore = cookies(); // Works in RSC + Route Handlers + Server Actions
 
-// We export the function that creates the client
-export function createServer() {
-  const cookieStore = cookies();
+//   return createServerClient(
+//     process.env.NEXT_PUBLIC_SUPABASE_URL!,
+//     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+//     {
+//       cookies: {
+//         // Universal get() that works even when cookieStore.get() does NOT exist (Server Actions)
+//         get(name: string) {
+//           // getAll() ALWAYS exists (MutableCookies, RequestCookies, ReadonlyRequestCookies)
+//           const allCookies = cookieStore.getAll();
+//           return allCookies.find((c) => c.name === name)?.value;
+//         },
 
-  return createServerClient(
-    process.env.SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value;
-        },
-        // The set and remove handlers are required by the createServerClient signature
-        set(name: string, value: string, options: CookieOptions) {
-          try {
-            cookieStore.set({ name, value, ...options });
-          } catch (error) {
-            // Error handling required due to set/remove being called outside of a Request/Response cycle
-            // This is safe to ignore in read-only server components
-          }
-        },
-        remove(name: string, options: CookieOptions) {
-          try {
-            cookieStore.set({ name, value: "", ...options });
-          } catch (error) {
-            // This is safe to ignore
-          }
-        },
-      },
-    }
-  );
-}
+//         // Safe-set only works in Route Handlers; server components cannot set cookies
+//         set(name: string, value: string, options: CookieOptions) {
+//           try {
+//             cookieStore.set({ name, value, ...options });
+//           } catch {
+//             // Ignore errors in Server Components where cookies cannot be set
+//           }
+//         },
+
+//         remove(name: string, options: CookieOptions) {
+//           try {
+//             cookieStore.set({
+//               name,
+//               value: "",
+//               ...options,
+//             });
+//           } catch {
+//             // Ignore for the same reason
+//           }
+//         },
+//       },
+//     }
+//   );
+// }

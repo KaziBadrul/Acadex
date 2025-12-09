@@ -1,8 +1,7 @@
 // app/notes/[id]/page.tsx
-// This is an async Server Component for secure data fetching.
+// This is an async Server Component WRAPPER.
 
-import { createServer } from "@/utils/supabase/server"; // <-- Import the clean utility
-import MarkdownRenderer from "@/components/MarkdownRenderer";
+import NoteFetcher from "@/components/NoteFetcher"; 
 
 interface NotePageProps {
   params: {
@@ -10,66 +9,43 @@ interface NotePageProps {
   };
 }
 
-export default async function NotePage({ params }: NotePageProps) {
-  // 1. Initialize the client using the utility
-  const supabase = createServer();
+export default async function NotePage(props: NotePageProps) {
+  
+  // 1. Await the outer promise wrapper (props)
+  const resolvedProps = await props; 
+  
+  // 2. Await the inner promise wrapper (resolvedProps.params)
+  // TypeScript will complain, but the runtime requires this hack to unwrap the internal Promise.
+  // We explicitly check the property 'params' on the resolved object.
+  let rawParams;
+  try {
+      rawParams = await resolvedProps.params; 
+  } catch (e) {
+      // Fallback for cases where it wasn't a Promise after all (unlikely given your logs)
+      rawParams = resolvedProps.params; 
+  }
+  
+  // 3. Extract the ID string
+  const idString = rawParams?.id ? String(rawParams.id) : '';
+  const noteId = parseInt(idString, 10);
+  
+  // Use the console logs to confirm the fix
+  console.log("Final Raw Params: ", rawParams); // Should now be { id: '1' }
+  console.log("ID String extracted: ", idString); // Should print '1'
+  console.log("Note ID parsed: ", noteId); // Should print 1 (number)
 
-  // 2. Validate and convert the URL ID
-  const noteId = parseInt(params.id, 10);
 
   if (isNaN(noteId)) {
+    // We display the raw string we tried to parse for better debugging
     return (
       <div className="p-8 text-center text-red-600">
-        Error: Invalid Note ID specified in the URL.
+        Error: Invalid Note ID specified in the URL. (Received: {idString || 'nothing'})
       </div>
     );
   }
 
-  // 3. Fetch the note data
-  const { data: note, error } = await supabase
-    .from("notes")
-    .select("id, title, content, course, topic, created_at, profiles(username)")
-    .eq("id", noteId)
-    .single();
-
-  if (error || !note) {
-    console.error("Fetch Error:", error);
-    return (
-      <div className="p-8 text-center text-red-600">
-        Note not found or you do not have permission to view it. (Check RLS
-        Policies)
-      </div>
-    );
-  }
-
-  // 4. Format and Render
-  const authorUsername = Array.isArray(note.profiles)
-    ? note.profiles[0]?.username
-    : (note.profiles as { username: string } | null)?.username ||
-      "Unknown User";
-
+  // 4. Render the Client Component and pass the validated ID
   return (
-    <div className="min-h-screen bg-gray-100 py-10">
-      <div className="max-w-4xl mx-auto px-4">
-        <h1 className="text-4xl font-extrabold mb-2 text-gray-900">
-          {note.title}
-        </h1>
-        <div className="text-lg text-gray-600 mb-6 border-b pb-4">
-          <p>
-            By{" "}
-            <span className="font-semibold text-blue-600">
-              {authorUsername}
-            </span>{" "}
-            in <span className="font-semibold">{note.course}</span> (
-            {note.topic})
-          </p>
-          <p className="text-sm mt-1">
-            Published: {new Date(note.created_at).toLocaleDateString()}
-          </p>
-        </div>
-
-        <MarkdownRenderer markdown={note.content} />
-      </div>
-    </div>
+    <NoteFetcher noteId={noteId} />
   );
 }
