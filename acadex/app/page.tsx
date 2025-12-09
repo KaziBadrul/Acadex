@@ -13,7 +13,7 @@ export default function Index() {
   const supabase = createClient();
 
   useEffect(() => {
-    // 1. Check current session state on mount
+    
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       setSession(!!session);
@@ -22,11 +22,11 @@ export default function Index() {
 
     checkSession();
     
-    // 2. Set up a listener for auth changes
+    
     const { data: authListener } = supabase.auth.onAuthStateChange(
       (event, session) => {
         setSession(!!session);
-        // Automatically redirect to the dashboard if a user logs in
+        // auto redr to the dashboard if a user logs in
         if (event === 'SIGNED_IN') {
             router.push('/dashboard');
         }
@@ -62,7 +62,7 @@ export default function Index() {
             </Link>
           ) : (
             <Link 
-              href="/login" // Assuming you have a login route
+              href="/login" 
               className="w-full inline-block py-3 px-6 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 transition duration-300"
             >
               Log In to Get Started
