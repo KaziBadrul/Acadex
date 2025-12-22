@@ -13,8 +13,10 @@ interface Note {
   topic: string;
   created_at: string;
   author_id: string;
-  type: string | null; // 👈 important
+  type: string | null;
 }
+
+type FilterType = "all" | "notes" | "pdfs";
 
 export default function DashboardPage() {
   const [notes, setNotes] = useState<Note[]>([]);
@@ -22,6 +24,9 @@ export default function DashboardPage() {
   const [user, setUser] = useState<{ id: string; username: string } | null>(
     null
   );
+
+  const [filter, setFilter] = useState<FilterType>("all");
+  const [search, setSearch] = useState("");
 
   const router = useRouter();
   const supabase = createClient();
@@ -45,13 +50,13 @@ export default function DashboardPage() {
 
       setUser({ id: user.id, username: profile?.username || "User" });
 
-      const { data, error } = await supabase
+      const { data: allNotes, error } = await supabase
         .from("notes")
         .select("*")
         .order("created_at", { ascending: false });
 
-      if (!error && data) {
-        setNotes(data as Note[]);
+      if (!error && allNotes) {
+        setNotes(allNotes as Note[]);
       }
 
       setLoading(false);
@@ -64,6 +69,26 @@ export default function DashboardPage() {
     await supabase.auth.signOut();
     router.push("/");
   };
+
+  // ---------- FILTER + SEARCH ----------
+  const pdfCount = notes.filter((n) => n.type === "pdf").length;
+  const noteCount = notes.length - pdfCount;
+
+  const filteredNotes = notes.filter((note) => {
+    const isPdf = note.type === "pdf";
+
+    if (filter === "pdfs" && !isPdf) return false;
+    if (filter === "notes" && isPdf) return false;
+
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      const haystack =
+        `${note.title} ${note.course} ${note.topic}`.toLowerCase();
+      if (!haystack.includes(q)) return false;
+    }
+
+    return true;
+  });
 
   if (loading) {
     return <div className="p-12 text-center text-lg">Loading Dashboard...</div>;
@@ -81,20 +106,120 @@ export default function DashboardPage() {
           </h1>
           <button
             onClick={handleLogout}
-            className="py-2 px-4 bg-red-500 text-white font-semibold rounded-lg shadow hover:bg-red-600 transition"
+            className="py-2 px-4 bg-red-500 text-white font-semibold rounded-lg shadow-md hover:bg-red-600 transition"
           >
             Log Out
           </button>
         </div>
 
-        {/* Notes List */}
-        <h2 className="text-2xl font-semibold text-gray-800 mb-4 border-b pb-2">
+        {/* --- Quick Stats and Actions --- */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+          <div className="bg-white p-6 rounded-xl shadow-lg border-l-4 border-blue-500">
+            <p className="text-sm font-medium text-gray-500">
+              Total Available Notes
+            </p>
+            <p className="text-4xl font-extrabold text-gray-900 mt-1">
+              {notes.length}
+            </p>
+            <div className="flex flex-col">
+              <Link
+                href="/notes/create"
+                className="mt-4 text-blue-500 hover:text-blue-700 text-sm font-medium"
+              >
+                ➕ Create New Note
+              </Link>
+              <Link
+                href="/notes/upload"
+                className="mt-2 text-blue-500 hover:text-blue-700 text-sm font-medium"
+              >
+                📥 Upload New Note
+              </Link>
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-xl shadow-lg border-l-4 border-green-500">
+            <p className="text-sm font-medium text-gray-500">Quick Actions</p>
+            <div className="mt-2 space-y-2">
+              <Link
+                href="/schedule"
+                className="block text-green-500 hover:underline"
+              >
+                🗓️ View Schedule
+              </Link>
+              <Link
+                href="/resources"
+                className="block text-green-500 hover:underline"
+              >
+                📚 Resource Repository
+              </Link>
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-xl shadow-lg border-l-4 border-yellow-500">
+            <p className="text-sm font-medium text-gray-500">User ID</p>
+            <p className="font-mono text-sm truncate">{user.id}</p>
+          </div>
+        </div>
+
+        {/* --- Notes List --- */}
+        <h2 className="text-2xl font-semibold text-gray-800 mb-3 border-b pb-2">
           All Available Notes
         </h2>
 
-        {notes.length > 0 ? (
+        {/* --- Filters + Search --- */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
+          <div className="flex gap-2">
+            <button
+              onClick={() => setFilter("all")}
+              className={`px-3 py-1 text-sm font-semibold rounded border
+                ${
+                  filter === "all"
+                    ? "bg-blue-600 text-white border-blue-600"
+                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
+                }
+              `}
+            >
+              All ({notes.length})
+            </button>
+
+            <button
+              onClick={() => setFilter("notes")}
+              className={`px-3 py-1 text-sm font-semibold rounded border
+                ${
+                  filter === "notes"
+                    ? "bg-blue-600 text-white border-blue-600"
+                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
+                }
+              `}
+            >
+              Notes ({noteCount})
+            </button>
+
+            <button
+              onClick={() => setFilter("pdfs")}
+              className={`px-3 py-1 text-sm font-semibold rounded border
+                ${
+                  filter === "pdfs"
+                    ? "bg-blue-600 text-white border-blue-600"
+                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
+                }
+              `}
+            >
+              PDFs ({pdfCount})
+            </button>
+          </div>
+
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search title, course, topic…"
+            className="w-full md:w-80 border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+
+        {filteredNotes.length > 0 ? (
           <div className="space-y-4">
-            {notes.map((note) => {
+            {filteredNotes.map((note) => {
               const isPdf = note.type === "pdf";
 
               return (
@@ -116,7 +241,6 @@ export default function DashboardPage() {
                       <span className="font-semibold">Topic:</span>
                       {note.topic}
 
-                      {/* 👇 SMALL PDF TAG */}
                       {isPdf && (
                         <span className="ml-2 px-2 py-0.5 text-xs font-semibold border border-red-500 text-red-600 rounded">
                           PDF
@@ -134,7 +258,7 @@ export default function DashboardPage() {
           </div>
         ) : (
           <div className="p-10 text-center text-gray-500 bg-white rounded-lg shadow">
-            No notes found. Create the first one! 📝
+            No notes match your filter or search.
           </div>
         )}
       </div>
