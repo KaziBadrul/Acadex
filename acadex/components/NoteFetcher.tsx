@@ -1,23 +1,24 @@
 // components/NoteFetcher.tsx
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { createClient } from '@/utils/supabase/client'; // <-- Uses the stable client utility
-import MarkdownRenderer from './MarkdownRenderer';
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/utils/supabase/client";
+import MarkdownRenderer from "./MarkdownRenderer";
 
 interface NoteFetcherProps {
   noteId: number;
 }
 
-// Define the shape of the data we expect to receive
 interface NoteData {
   id: number;
   title: string;
-  content: string;
+  content: string | null;
   course: string;
   topic: string;
   created_at: string;
+  type: string | null; // <-- NEW
+  file_url: string | null; // <-- NEW
   profiles: { username: string } | { username: string }[] | null;
 }
 
@@ -25,33 +26,47 @@ export default function NoteFetcher({ noteId }: NoteFetcherProps) {
   const [note, setNote] = useState<NoteData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
   const supabase = createClient();
-  const router = useRouter(); 
+  const router = useRouter();
 
   useEffect(() => {
     async function fetchNote() {
-      // 1. Check Auth State before fetching (Ensures protection)
-      const { data: { session } } = await supabase.auth.getSession();
+      // 1. Auth check
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!session) {
-          // If not logged in, redirect them to the login page
-          router.push('/login');
-          return;
+        router.push("/login");
+        return;
       }
-      
-      // 2. Fetch the Note Data (Client-side API call)
+
+      // 2. Fetch note (include type + file_url)
       const { data: noteData, error: fetchError } = await supabase
         .from("notes")
-        .select("id, title, content, course, topic, created_at, profiles(username)")
+        .select(
+          `
+          id,
+          title,
+          content,
+          course,
+          topic,
+          created_at,
+          type,
+          file_url,
+          profiles(username)
+        `
+        )
         .eq("id", noteId)
         .single();
 
       if (fetchError) {
         console.error("Fetch Error:", fetchError);
-        // The error here will usually be RLS denial or 404
         setError("Note not found or you do not have permission to view it.");
-      } else if (noteData) {
+      } else {
         setNote(noteData as NoteData);
       }
+
       setLoading(false);
     }
 
@@ -61,20 +76,27 @@ export default function NoteFetcher({ noteId }: NoteFetcherProps) {
   if (loading) {
     return <div className="p-8 text-center text-gray-500">Loading Note...</div>;
   }
-  
+
   if (error) {
-    return <div className="p-8 text-center text-red-600 font-semibold">{error}</div>;
+    return (
+      <div className="p-8 text-center text-red-600 font-semibold">{error}</div>
+    );
   }
 
   if (!note) {
-      return <div className="p-8 text-center text-red-600">Note data could not be retrieved.</div>;
+    return (
+      <div className="p-8 text-center text-red-600">
+        Note data could not be retrieved.
+      </div>
+    );
   }
 
-  // 3. Format and Render
+  // Author resolution (unchanged)
   const authorUsername = Array.isArray(note.profiles)
     ? note.profiles[0]?.username
-    : (note.profiles as { username: string } | null)?.username ||
-      "Unknown User";
+    : note.profiles?.username || "Unknown User";
+
+  const isPdf = note.type === "pdf" && !!note.file_url;
 
   return (
     <div className="min-h-screen bg-gray-100 py-10">
@@ -82,6 +104,7 @@ export default function NoteFetcher({ noteId }: NoteFetcherProps) {
         <h1 className="text-4xl font-extrabold mb-2 text-gray-900">
           {note.title}
         </h1>
+
         <div className="text-lg text-gray-600 mb-6 border-b pb-4">
           <p>
             By{" "}
@@ -96,7 +119,30 @@ export default function NoteFetcher({ noteId }: NoteFetcherProps) {
           </p>
         </div>
 
-        <MarkdownRenderer markdown={note.content} />
+        {/* ===== CONTENT ===== */}
+        {isPdf ? (
+          <div className="bg-white rounded-xl shadow p-4">
+            <div className="flex justify-between items-center mb-3">
+              <p className="text-sm text-gray-500">PDF Document</p>
+              <a
+                href={note.file_url!}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 text-sm hover:underline"
+              >
+                Open in new tab
+              </a>
+            </div>
+
+            <iframe
+              src={note.file_url!}
+              className="w-full h-[800px] border rounded"
+              title="PDF Viewer"
+            />
+          </div>
+        ) : (
+          <MarkdownRenderer markdown={note.content ?? ""} />
+        )}
       </div>
     </div>
   );

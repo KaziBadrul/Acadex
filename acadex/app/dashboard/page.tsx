@@ -97,9 +97,14 @@ export default function DashboardPage() {
           <div className="bg-white p-6 rounded-xl shadow-lg border-l-4 border-blue-500">
             <p className="text-sm font-medium text-gray-500">Total Available Notes</p>
             <p className="text-4xl font-extrabold text-gray-900 mt-1">{notes.length}</p>
-            <Link href="/notes/create" className="mt-4 inline-block text-blue-500 hover:text-blue-700 text-sm font-medium">
-              + Create New Note
+            <div className='flex flex-col'>
+              <Link href="/notes/create" className="mt-4 inline-block text-blue-500 hover:text-blue-700 text-sm font-medium">
+              ➕ Create New Note
             </Link>
+            <Link href="/notes/upload" className="mt-4 inline-block text-blue-500 hover:text-blue-700 text-sm font-medium">
+              📥 Upload New Note
+            </Link>
+            </div>
           </div>
           
           <div className="bg-white p-6 rounded-xl shadow-lg border-l-4 border-green-500">
