@@ -72,6 +72,7 @@ export default function AuthForm() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
+          minLength={8}
           className="p-3 border border-gray-300 text-black rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition duration-150"
         />
         <button

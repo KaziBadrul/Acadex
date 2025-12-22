@@ -1,7 +1,7 @@
 // components/NoteForm.tsx
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 // import ReactMarkdown from 'react-markdown' // Uncomment if you want an in-page preview
@@ -13,6 +13,28 @@ export default function NoteForm() {
   const [topic, setTopic] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleButtonClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    await fetch("/api/upload", {
+      method: "POST",
+      body: formData,
+    });
+
+    alert("File uploaded successfully");
+  };
 
   const router = useRouter();
   const supabase = createClient();
@@ -131,10 +153,23 @@ export default function NoteForm() {
       </div>
 
       {/* Content (Markdown Editor Area) */}
-      <div>
-        <label className="block text-gray-700 font-semibold mb-2">
-          Content (Supports Markdown)
-        </label>
+      <div className="">
+        <div className="w-fit h-fit flex items-center justify-center mb-4">
+          <label className="block text-gray-700 font-semibold mb-2">
+            Content (Supports Markdown)
+          </label>
+           {/* Hidden file input */}
+          <input
+            type="file"
+            ref={fileInputRef}
+            hidden
+            accept="image/*"
+            onChange={handleFileChange}
+          />
+          <button onClick={handleButtonClick} className="bg-green-600 ml-10 px-4 py-2 rounded-2xl transition-all duration-300 hover:bg-green-700 cursor-pointer flex items-center justify-center">
+            <p className="font-bold">Upload file</p>
+          </button>
+        </div>
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
