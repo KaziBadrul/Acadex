@@ -163,7 +163,7 @@ export default function NoteForm() {
             type="file"
             ref={fileInputRef}
             hidden
-            accept="image/*"
+            accept="image/*,.pdf"
             onChange={handleFileChange}
           />
           <button onClick={handleButtonClick} className="bg-green-600 ml-10 px-4 py-2 rounded-2xl transition-all duration-300 hover:bg-green-700 cursor-pointer flex items-center justify-center">
