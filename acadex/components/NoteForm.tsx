@@ -28,12 +28,66 @@ export default function NoteForm() {
     const formData = new FormData();
     formData.append("file", file);
 
-    await fetch("/api/upload", {
-      method: "POST",
-      body: formData,
-    });
+    setLoading(true);
+    setMessage("Uploading file...");
 
-    alert("File uploaded successfully");
+    const parseJsonSafe = async (res: Response) => {
+      const raw = await res.text();
+      try {
+        return JSON.parse(raw);
+      } catch (e) {
+        return { _rawText: raw };
+      }
+    };
+
+    try {
+      const uploadRes = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+      const uploadJson = await parseJsonSafe(uploadRes);
+
+      if (!uploadRes.ok) {
+        const msg = uploadJson?._rawText ? uploadJson._rawText : JSON.stringify(uploadJson);
+        setMessage("Upload failed: " + msg);
+        setLoading(false);
+        return;
+      }
+
+      const uploadedPath = uploadJson?.path as string | undefined;
+      if (!uploadedPath) {
+        const msg = uploadJson?._rawText ? uploadJson._rawText : JSON.stringify(uploadJson);
+        setMessage("Upload did not return a path: " + msg);
+        setLoading(false);
+        return;
+      }
+
+      setMessage("File uploaded. Running OCR...");
+
+      const ocrRes = await fetch("/api/ocr", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ path: uploadedPath }),
+      });
+      const ocrJson = await parseJsonSafe(ocrRes);
+
+      if (!ocrRes.ok) {
+        const msg = ocrJson?._rawText ? ocrJson._rawText : JSON.stringify(ocrJson);
+        setMessage("OCR request failed: " + msg);
+      } else if (ocrJson?.success && typeof ocrJson.text === "string") {
+        setContent((prev) => (prev ? prev + "\n\n" + ocrJson.text : ocrJson.text));
+        setMessage("OCR completed and content inserted into editor.");
+      } else {
+        const msg = ocrJson?.error ?? ocrJson?._rawText ?? JSON.stringify(ocrJson);
+        setMessage("OCR failed: " + msg);
+      }
+
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    } catch (err: any) {
+      setMessage("Error during upload/OCR: " + String(err));
+    } finally {
+      setLoading(false);
+    }
   };
 
   const router = useRouter();
@@ -166,7 +220,7 @@ export default function NoteForm() {
             accept="image/*,.pdf"
             onChange={handleFileChange}
           />
-          <button onClick={handleButtonClick} className="bg-green-600 ml-10 px-4 py-2 rounded-2xl transition-all duration-300 hover:bg-green-700 cursor-pointer flex items-center justify-center">
+          <button type="button" onClick={handleButtonClick} className="bg-green-600 ml-10 px-4 py-2 rounded-2xl transition-all duration-300 hover:bg-green-700 cursor-pointer flex items-center justify-center">
             <p className="font-bold">Upload file</p>
           </button>
         </div>
