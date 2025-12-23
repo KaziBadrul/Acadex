@@ -4,6 +4,11 @@ import { v2 as cloudinary } from "cloudinary";
 import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
 
+cloudinary.config({
+  secure: true,
+});
+
+
 function uploadBufferToCloudinary(buffer: Buffer) {
   return new Promise<any>((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
