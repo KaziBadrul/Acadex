@@ -10,7 +10,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "No file received" }, { status: 400 });
   }
 
-  // ✅ Allowed file types
   const allowedTypes = [
     "image/png",
     "image/jpeg",
