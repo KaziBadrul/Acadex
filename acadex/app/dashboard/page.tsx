@@ -221,6 +221,7 @@ export default function DashboardPage() {
           <div className="space-y-4">
             {filteredNotes.map((note) => {
               const isPdf = note.type === "pdf";
+              const isScanned = note.type === "scanned";
 
               return (
                 <Link
@@ -244,6 +245,12 @@ export default function DashboardPage() {
                       {isPdf && (
                         <span className="ml-2 px-2 py-0.5 text-xs font-semibold border border-red-500 text-red-600 rounded">
                           PDF
+                        </span>
+                      )}
+
+                      {isScanned && (
+                        <span className="ml-2 px-2 py-0.5 text-xs font-semibold border border-green-500 text-green-600 rounded">
+                          Scanned
                         </span>
                       )}
 

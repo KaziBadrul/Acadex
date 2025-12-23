@@ -13,15 +13,19 @@ export default function NoteForm() {
   const [topic, setTopic] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
-    const fileInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const router = useRouter();
 
   const handleButtonClick = () => {
     fileInputRef.current?.click();
   };
 
-  const handleFileChange = async (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleHandwritingButtonClick = () => {
+    router.push("/notes/upload/handwriting");
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -48,7 +52,9 @@ export default function NoteForm() {
       const uploadJson = await parseJsonSafe(uploadRes);
 
       if (!uploadRes.ok) {
-        const msg = uploadJson?._rawText ? uploadJson._rawText : JSON.stringify(uploadJson);
+        const msg = uploadJson?._rawText
+          ? uploadJson._rawText
+          : JSON.stringify(uploadJson);
         setMessage("Upload failed: " + msg);
         setLoading(false);
         return;
@@ -56,7 +62,9 @@ export default function NoteForm() {
 
       const uploadedPath = uploadJson?.path as string | undefined;
       if (!uploadedPath) {
-        const msg = uploadJson?._rawText ? uploadJson._rawText : JSON.stringify(uploadJson);
+        const msg = uploadJson?._rawText
+          ? uploadJson._rawText
+          : JSON.stringify(uploadJson);
         setMessage("Upload did not return a path: " + msg);
         setLoading(false);
         return;
@@ -72,13 +80,18 @@ export default function NoteForm() {
       const ocrJson = await parseJsonSafe(ocrRes);
 
       if (!ocrRes.ok) {
-        const msg = ocrJson?._rawText ? ocrJson._rawText : JSON.stringify(ocrJson);
+        const msg = ocrJson?._rawText
+          ? ocrJson._rawText
+          : JSON.stringify(ocrJson);
         setMessage("OCR request failed: " + msg);
       } else if (ocrJson?.success && typeof ocrJson.text === "string") {
-        setContent((prev) => (prev ? prev + "\n\n" + ocrJson.text : ocrJson.text));
+        setContent((prev) =>
+          prev ? prev + "\n\n" + ocrJson.text : ocrJson.text
+        );
         setMessage("OCR completed and content inserted into editor.");
       } else {
-        const msg = ocrJson?.error ?? ocrJson?._rawText ?? JSON.stringify(ocrJson);
+        const msg =
+          ocrJson?.error ?? ocrJson?._rawText ?? JSON.stringify(ocrJson);
         setMessage("OCR failed: " + msg);
       }
 
@@ -90,7 +103,7 @@ export default function NoteForm() {
     }
   };
 
-  const router = useRouter();
+  // const router = useRouter();
   const supabase = createClient();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -212,7 +225,7 @@ export default function NoteForm() {
           <label className="block text-gray-700 font-semibold mb-2">
             Content (Supports Markdown)
           </label>
-           {/* Hidden file input */}
+          {/* Hidden file input */}
           <input
             type="file"
             ref={fileInputRef}
@@ -220,8 +233,20 @@ export default function NoteForm() {
             accept="image/*,.pdf"
             onChange={handleFileChange}
           />
-          <button type="button" onClick={handleButtonClick} className="bg-green-600 ml-10 px-4 py-2 rounded-2xl transition-all duration-300 hover:bg-green-700 cursor-pointer flex items-center justify-center">
+          <button
+            type="button"
+            onClick={handleButtonClick}
+            className="bg-green-600 ml-10 px-4 py-2 rounded-2xl transition-all duration-300 hover:bg-green-700 cursor-pointer flex items-center justify-center"
+          >
             <p className="font-bold">Upload file</p>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleHandwritingButtonClick}
+            className="bg-blue-600 ml-10 px-4 py-2 rounded-2xl transition-all duration-300 hover:bg-blue-700 cursor-pointer flex items-center justify-center"
+          >
+            <p className="font-bold">Scan Handwriting</p>
           </button>
         </div>
         <textarea
