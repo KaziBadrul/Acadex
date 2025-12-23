@@ -1,7 +1,7 @@
 // components/NoteForm.tsx
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 // import ReactMarkdown from 'react-markdown' // Uncomment if you want an in-page preview
@@ -15,6 +15,18 @@ export default function NoteForm() {
   const [message, setMessage] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  useEffect(() => {
+  const transcript = localStorage.getItem("voice_transcript");
+
+  if (transcript) {
+    setContent((prev) =>
+      prev ? prev + "\n\n" + transcript : transcript
+    );
+    localStorage.removeItem("voice_transcript"); 
+  }
+}, []);
+
+
   const router = useRouter();
 
   const handleButtonClick = () => {
@@ -23,6 +35,10 @@ export default function NoteForm() {
 
   const handleHandwritingButtonClick = () => {
     router.push("/notes/upload/handwriting");
+  };
+
+  const handleVoiceButtonClick = () => {
+    router.push("/transcription");
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -238,7 +254,7 @@ export default function NoteForm() {
             onClick={handleButtonClick}
             className="bg-green-600 ml-10 px-4 py-2 rounded-2xl transition-all duration-300 hover:bg-green-700 cursor-pointer flex items-center justify-center"
           >
-            <p className="font-bold">Upload file</p>
+            <p className="font-bold">📃 Upload file</p>
           </button>
 
           <button
@@ -246,7 +262,15 @@ export default function NoteForm() {
             onClick={handleHandwritingButtonClick}
             className="bg-blue-600 ml-10 px-4 py-2 rounded-2xl transition-all duration-300 hover:bg-blue-700 cursor-pointer flex items-center justify-center"
           >
-            <p className="font-bold">Scan Handwriting</p>
+            <p className="font-bold">✍️ Scan Handwriting</p>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleVoiceButtonClick}
+            className="bg-amber-600 ml-10 px-4 py-2 rounded-2xl transition-all duration-300 hover:bg-amber-700 cursor-pointer flex items-center justify-center"
+          >
+            <p className="font-bold">🎙️ Voice to Text</p>
           </button>
         </div>
         <textarea
