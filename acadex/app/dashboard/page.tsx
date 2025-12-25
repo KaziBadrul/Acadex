@@ -285,6 +285,12 @@ function DashboardContent() {
                 📚 Resource Repository
               </Link>
               <Link
+                href="/requests"
+                className="block text-green-500 hover:underline"
+              >
+                📝 Request Note (Community)
+              </Link>
+              <Link
                 href="/reminder/set"
                 className="block text-green-500 hover:underline"
               >
