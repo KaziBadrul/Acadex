@@ -6,7 +6,7 @@ import { Color } from "@tiptap/extension-color";
 import { TextStyle } from "@tiptap/extension-text-style";
 import { Highlight } from "@tiptap/extension-highlight";
 import { TextAlign } from "@tiptap/extension-text-align";
-import { useEffect } from "react"; // Import useEffect
+import { useEffect } from "react"; 
 
 const Toolbar = ({ editor }: { editor: any }) => {
   if (!editor) return null;
@@ -39,7 +39,7 @@ const Toolbar = ({ editor }: { editor: any }) => {
   return (
     <div className="flex flex-wrap items-center gap-1 p-2 bg-zinc-950 border border-zinc-800 rounded-t-2xl sticky top-0 z-10 select-none">
       
-      {/* Basics: Bold, Italic */}
+      
       <div className="flex gap-1 pr-2 border-r border-zinc-800">
         <IconButton onClick={() => editor.chain().focus().toggleBold().run()} isActive={editor.isActive("bold")} title="Bold">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M6 12h9a4 4 0 0 1 0 8H7a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h7a4 4 0 0 1 0 8"/></svg>
@@ -49,7 +49,7 @@ const Toolbar = ({ editor }: { editor: any }) => {
         </IconButton>
       </div>
 
-      {/* Alignment Icons */}
+      
       <div className="flex gap-1 pr-2 border-r border-zinc-800">
         <IconButton onClick={() => editor.chain().focus().setTextAlign("left").run()} isActive={editor.isActive({ textAlign: "left" })} title="Align Left">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="21" x2="3" y1="6" y2="6"/><line x1="15" x2="3" y1="12" y2="12"/><line x1="17" x2="3" y1="18" y2="18"/></svg>
@@ -62,7 +62,7 @@ const Toolbar = ({ editor }: { editor: any }) => {
         </IconButton>
       </div>
 
-      {/* Headings */}
+      
       <div className="flex gap-1 pr-2 border-r border-zinc-800">
         <IconButton onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} isActive={editor.isActive("heading", { level: 1 })} title="Heading 1">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12h8"/><path d="M4 18V6"/><path d="M12 18V6"/><path d="m17 12 3-2v8"/></svg>
@@ -72,7 +72,7 @@ const Toolbar = ({ editor }: { editor: any }) => {
         </IconButton>
       </div>
 
-      {/* Color & Highlight */}
+      
       <div className="flex items-center gap-2 ml-1">
         <div className="relative flex items-center justify-center w-6 h-6 rounded hover:bg-zinc-800 cursor-pointer group">
             <svg className="absolute text-zinc-400 group-hover:text-zinc-200 pointer-events-none" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18.375 2.625a3.875 3.875 0 0 0-5.48 5.48L5.25 15.75a3 3 0 0 0-.879 2.121V21h3.121a3 3 0 0 0 2.121-.879l7.645-7.645a3.875 3.875 0 0 0 5.48-5.48Z"/><path d="M14 6l4 4"/></svg>
@@ -96,7 +96,7 @@ const Toolbar = ({ editor }: { editor: any }) => {
         </IconButton>
       </div>
 
-      {/* Undo/Redo */}
+      
       <div className="flex gap-1 ml-auto">
         <IconButton onClick={() => editor.chain().focus().undo().run()} title="Undo">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>
@@ -109,8 +109,8 @@ const Toolbar = ({ editor }: { editor: any }) => {
   );
 };
 
-// Update Props interface to accept content
-export default function Tiptap({ content }: { content: string }) {
+
+export default function Tiptap({ content, onChange }: { content: string; onChange: (html:string) => void }) {
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -121,26 +121,25 @@ export default function Tiptap({ content }: { content: string }) {
         types: ["heading", "paragraph"],
       }),
     ],
-    // Set initial content to prop
+    
     content: content || ``,
     immediatelyRender: false,
     editorProps: {
       attributes: {
-        class: "focus:outline-none min-h-[400px] p-8 text-zinc-300",
+        class: "focus:outline-none min-h-[400px] p-8 text-black",
       },
+    },
+    onUpdate: ({ editor }) => {
+      onChange(editor.getHTML());
     },
   });
 
-  // Sync editor content when the prop 'content' changes (e.g., after OCR)
+  
   useEffect(() => {
     if (editor && content) {
-      // Only update if the content is different to avoid cursor jumps or loops
-      // You can strip HTML tags for a stricter check if needed, but this works for injection
-      const currentText = editor.getText();
-      // If the editor is empty or significantly different, we update it.
-      // For this specific 'OCR Paste' feature, overwriting or setting content is safer.
-      if (currentText !== content) {
-          editor.commands.setContent(content);
+      
+      if (editor.getHTML() !== content) {
+        editor.commands.setContent(content);
       }
     }
   }, [content, editor]);
@@ -148,7 +147,7 @@ export default function Tiptap({ content }: { content: string }) {
   if (!editor) return null;
 
   return (
-    <div className="w-full max-w-4xl mx-auto rounded-xl border border-zinc-800 bg-zinc-950 shadow-xl overflow-hidden">
+    <div className="w-full max-w-4xl mx-auto rounded-2xl border border-zinc-800 bg-[#f5f5f5] shadow-xl overflow-hidden">
       <Toolbar editor={editor} />
       
       <style jsx global>{`

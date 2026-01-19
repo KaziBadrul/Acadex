@@ -139,17 +139,17 @@ export default function NoteForm() {
       return;
     }
 
-    // 2. Prepare the data for insertion
+    
     const newNote = {
-      author_id: user.id, // Linked to your public.profiles via the trigger we created!
+      author_id: user.id, 
       title: title.trim(),
       content: content,
       course: course.trim(),
       topic: topic.trim(),
-      // 'visibility' defaults to 'public' in the DB schema, so we omit it here
+      
     };
 
-    // 3. Insert into the 'notes' table
+    
     const { error } = await supabase.from("notes").insert([newNote]);
 
     if (error) {
@@ -171,7 +171,7 @@ export default function NoteForm() {
   return (
     <form
       onSubmit={handleSubmit}
-      // Modern styling: Larger padding, subtle background, rounded corners, significant shadow
+      
       className="p-10 max-w-5xl mx-auto space-y-8 bg-white border border-gray-100 shadow-2xl rounded-2xl mt-12 transition duration-300 hover:shadow-3xl"
     >
       <h1 className="text-4xl font-extrabold text-center text-gray-900 tracking-tight border-b pb-4">
@@ -201,7 +201,7 @@ export default function NoteForm() {
           onChange={(e) => setTitle(e.target.value)}
           required
           placeholder="e.g., Dijkstra's Algorithm: A Simple Explanation"
-          // Modern input styling: Deeper padding, better focus ring, smooth corners
+          
           className="w-full p-4 border border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition duration-150 shadow-sm"
         />
       </div>
@@ -242,7 +242,7 @@ export default function NoteForm() {
           <label className="block text-gray-700 font-semibold">
             Content
           </label>
-          {/* Hidden file input */}
+         {/* Hidden file input */}
           <input
             type="file"
             ref={fileInputRef}
@@ -282,7 +282,8 @@ export default function NoteForm() {
                 <p className="text-zinc-500 text-sm"></p>
               </header>
       
-              <Tiptap content={content} />
+              <Tiptap content={content}
+              onChange={(newHtml) => setContent(newHtml)} />
             </div>
           </div>
 
@@ -290,7 +291,7 @@ export default function NoteForm() {
       <button
         type="submit"
         disabled={loading}
-        // Premium Button Styling: Brighter color, stronger shadow, subtle hover effect
+        
         className="w-full bg-blue-600 text-white font-extrabold py-4 rounded-xl shadow-lg hover:bg-blue-700 transition duration-300 ease-in-out transform hover:scale-[1.005] disabled:bg-gray-400 disabled:shadow-none"
       >
         {loading ? "Publishing Note..." : "🚀 Publish Note to Acadex"}
