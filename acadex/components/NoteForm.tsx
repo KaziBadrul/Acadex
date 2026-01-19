@@ -4,6 +4,7 @@
 import { useRef, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
+import Tiptap from "./Tiptap";
 // import ReactMarkdown from 'react-markdown' // Uncomment if you want an in-page preview
 
 export default function NoteForm() {
@@ -237,9 +238,9 @@ export default function NoteForm() {
 
       {/* Content (Markdown Editor Area) */}
       <div className="">
-        <div className="w-fit h-fit flex items-center justify-center mb-4">
-          <label className="block text-gray-700 font-semibold mb-2">
-            Content (Supports Markdown)
+        <div className="w-fit h-fit flex items-center justify-center">
+          <label className="block text-gray-700 font-semibold">
+            Content
           </label>
           {/* Hidden file input */}
           <input
@@ -272,17 +273,18 @@ export default function NoteForm() {
           >
             <p className="font-bold">🎙️ Voice to Text</p>
           </button>
-        </div>
-        <textarea
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          required
-          rows={15}
-          placeholder="Start writing your note here using Markdown syntax for clear formatting (e.g., # Headings, **bold**, *italics*, lists)..."
-          // Styled for a cleaner writing experience
-          className="w-full p-5 border border-gray-300 rounded-xl font-mono text-gray-800 resize-y focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition duration-150 shadow-inner bg-gray-50"
-        />
+        </div>        
       </div>
+      <div className=" text-white p-12">
+            <div className="max-w-3xl mx-auto space-y-8">
+              <header className="space-y-2">
+                <h1 className="text-4xl font-light tracking-tighter"></h1>
+                <p className="text-zinc-500 text-sm"></p>
+              </header>
+      
+              <Tiptap content={content} />
+            </div>
+          </div>
 
       {/* Submit Button */}
       <button

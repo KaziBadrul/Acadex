@@ -6,11 +6,11 @@ import { Color } from "@tiptap/extension-color";
 import { TextStyle } from "@tiptap/extension-text-style";
 import { Highlight } from "@tiptap/extension-highlight";
 import { TextAlign } from "@tiptap/extension-text-align";
+import { useEffect } from "react"; // Import useEffect
 
 const Toolbar = ({ editor }: { editor: any }) => {
   if (!editor) return null;
 
-  // Reusable button component for consistency
   const IconButton = ({ 
     onClick, 
     isActive, 
@@ -37,7 +37,7 @@ const Toolbar = ({ editor }: { editor: any }) => {
   );
 
   return (
-    <div className="flex flex-wrap items-center gap-1 p-2 bg-zinc-950 border  rounded-t-xl sticky top-0 z-10 select-none">
+    <div className="flex flex-wrap items-center gap-1 p-2 bg-zinc-950 border border-zinc-800 rounded-t-2xl sticky top-0 z-10 select-none">
       
       {/* Basics: Bold, Italic */}
       <div className="flex gap-1 pr-2 border-r border-zinc-800">
@@ -75,7 +75,6 @@ const Toolbar = ({ editor }: { editor: any }) => {
       {/* Color & Highlight */}
       <div className="flex items-center gap-2 ml-1">
         <div className="relative flex items-center justify-center w-6 h-6 rounded hover:bg-zinc-800 cursor-pointer group">
-            {/* Color Icon (Paintbrush) */}
             <svg className="absolute text-zinc-400 group-hover:text-zinc-200 pointer-events-none" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18.375 2.625a3.875 3.875 0 0 0-5.48 5.48L5.25 15.75a3 3 0 0 0-.879 2.121V21h3.121a3 3 0 0 0 2.121-.879l7.645-7.645a3.875 3.875 0 0 0 5.48-5.48Z"/><path d="M14 6l4 4"/></svg>
             <input
               type="color"
@@ -93,7 +92,6 @@ const Toolbar = ({ editor }: { editor: any }) => {
           isActive={editor.isActive("highlight")} 
           title="Highlight"
         >
-          {/* Highlighter Icon */}
           <svg className={editor.isActive("highlight") ? "text-yellow-600" : ""} xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 11-6 6v3h9l3-3"/><path d="m22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4"/></svg>
         </IconButton>
       </div>
@@ -111,7 +109,8 @@ const Toolbar = ({ editor }: { editor: any }) => {
   );
 };
 
-export default function Tiptap() {
+// Update Props interface to accept content
+export default function Tiptap({ content }: { content: string }) {
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -122,9 +121,8 @@ export default function Tiptap() {
         types: ["heading", "paragraph"],
       }),
     ],
-    content: `
-      
-    `,
+    // Set initial content to prop
+    content: content || ``,
     immediatelyRender: false,
     editorProps: {
       attributes: {
@@ -133,13 +131,26 @@ export default function Tiptap() {
     },
   });
 
+  // Sync editor content when the prop 'content' changes (e.g., after OCR)
+  useEffect(() => {
+    if (editor && content) {
+      // Only update if the content is different to avoid cursor jumps or loops
+      // You can strip HTML tags for a stricter check if needed, but this works for injection
+      const currentText = editor.getText();
+      // If the editor is empty or significantly different, we update it.
+      // For this specific 'OCR Paste' feature, overwriting or setting content is safer.
+      if (currentText !== content) {
+          editor.commands.setContent(content);
+      }
+    }
+  }, [content, editor]);
+
   if (!editor) return null;
 
   return (
-    <div className="w-full max-w-4xl mx-auto rounded-xl border border-zinc-800 bg-[#fffff4] shadow-xl overflow-hidden">
+    <div className="w-full max-w-4xl mx-auto rounded-xl border border-zinc-800 bg-zinc-950 shadow-xl overflow-hidden">
       <Toolbar editor={editor} />
       
-      {/* Global styles for Tiptap content */}
       <style jsx global>{`
         .ProseMirror { outline: none; }
         .ProseMirror h1 { font-size: 2rem; font-weight: 700; margin-bottom: 1rem; color: white; }
