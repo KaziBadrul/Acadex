@@ -152,6 +152,12 @@ export default function DashboardPage() {
               >
                 📚 Resource Repository
               </Link>
+              <Link
+                href="/reminder/set"
+                className="block text-green-500 hover:underline"
+              >
+                ⏰ Set Reminder
+              </Link>
             </div>
           </div>
 
