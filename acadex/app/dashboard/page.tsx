@@ -158,6 +158,12 @@ export default function DashboardPage() {
               >
                 ⏰ Set Reminder
               </Link>
+              <Link
+                href="/reminder"
+                className="block text-green-500 hover:underline"
+              >
+                🔔 View Reminder
+              </Link>
             </div>
           </div>
 
