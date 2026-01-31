@@ -290,7 +290,7 @@ export default function NoteForm() {
               disabled={loading}
               onSaveInk={async (blob) => {
                 setLoading(true);
-                setMessage("Saving handwriting...");
+                setMessage("Uploading handwriting...");
 
                 try {
                   const file = new File(
@@ -304,7 +304,7 @@ export default function NoteForm() {
                   const fd = new FormData();
                   fd.append("file", file);
 
-                  const res = await fetch("/api/upload", {
+                  const res = await fetch("/api/handwriting-upload", {
                     method: "POST",
                     body: fd,
                   });
@@ -313,24 +313,28 @@ export default function NoteForm() {
 
                   if (!res.ok) {
                     setMessage(
-                      "Save ink failed: " + (json?.error ?? "Unknown error"),
+                      "Upload failed: " + (json?.error ?? "Unknown error"),
                     );
                     return;
                   }
 
-                  const imgPath = json?.path as string | undefined;
-                  if (!imgPath) {
-                    setMessage("Save ink failed: upload returned no path");
+                  const url = json?.url as string | undefined;
+                  if (!url) {
+                    setMessage("Upload failed: no url returned");
                     return;
                   }
 
-                  // Insert into TipTap HTML
-                  const imgHtml = `<p></p><img src="${imgPath}" alt="handwriting" />`;
-                  setContent((prev) => (prev ? prev + imgHtml : imgHtml));
+                  // Insert image into TipTap HTML
+                  const imgHtml = `<p></p><img src="${url}" alt="handwriting" />`;
+                  setContent((prev) =>
+                    prev
+                      ? prev + imgHtml
+                      : `<img src="${url}" alt="handwriting" />`,
+                  );
 
-                  setMessage("Handwriting saved and inserted into the note.");
+                  setMessage("Handwriting inserted into the note!");
                 } catch (e: any) {
-                  setMessage("Save ink error: " + String(e?.message ?? e));
+                  setMessage("Upload error: " + String(e?.message ?? e));
                 } finally {
                   setLoading(false);
                 }
