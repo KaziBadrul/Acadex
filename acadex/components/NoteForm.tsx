@@ -5,6 +5,8 @@ import { useRef, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import Tiptap from "./Tiptap";
+import HandwritingPad from "./HandwritingPad";
+
 // import ReactMarkdown from 'react-markdown' // Uncomment if you want an in-page preview
 
 export default function NoteForm() {
@@ -14,19 +16,17 @@ export default function NoteForm() {
   const [topic, setTopic] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [showPad, setShowPad] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-  const transcript = localStorage.getItem("voice_transcript");
+    const transcript = localStorage.getItem("voice_transcript");
 
-  if (transcript) {
-    setContent((prev) =>
-      prev ? prev + "\n\n" + transcript : transcript
-    );
-    localStorage.removeItem("voice_transcript"); 
-  }
-}, []);
-
+    if (transcript) {
+      setContent((prev) => (prev ? prev + "\n\n" + transcript : transcript));
+      localStorage.removeItem("voice_transcript");
+    }
+  }, []);
 
   const router = useRouter();
 
@@ -103,7 +103,7 @@ export default function NoteForm() {
         setMessage("OCR request failed: " + msg);
       } else if (ocrJson?.success && typeof ocrJson.text === "string") {
         setContent((prev) =>
-          prev ? prev + "\n\n" + ocrJson.text : ocrJson.text
+          prev ? prev + "\n\n" + ocrJson.text : ocrJson.text,
         );
         setMessage("OCR completed and content inserted into editor.");
       } else {
@@ -139,17 +139,14 @@ export default function NoteForm() {
       return;
     }
 
-    
     const newNote = {
-      author_id: user.id, 
+      author_id: user.id,
       title: title.trim(),
       content: content,
       course: course.trim(),
       topic: topic.trim(),
-      
     };
 
-    
     const { error } = await supabase.from("notes").insert([newNote]);
 
     if (error) {
@@ -171,7 +168,6 @@ export default function NoteForm() {
   return (
     <form
       onSubmit={handleSubmit}
-      
       className="p-10 max-w-5xl mx-auto space-y-8 bg-white border border-gray-100 shadow-2xl rounded-2xl mt-12 transition duration-300 hover:shadow-3xl"
     >
       <h1 className="text-4xl font-extrabold text-center text-gray-900 tracking-tight border-b pb-4">
@@ -201,7 +197,6 @@ export default function NoteForm() {
           onChange={(e) => setTitle(e.target.value)}
           required
           placeholder="e.g., Dijkstra's Algorithm: A Simple Explanation"
-          
           className="w-full p-4 border border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition duration-150 shadow-sm"
         />
       </div>
@@ -239,10 +234,8 @@ export default function NoteForm() {
       {/* Content (Markdown Editor Area) */}
       <div className="">
         <div className="w-fit h-fit flex items-center justify-center">
-          <label className="block text-gray-700 font-semibold">
-            Content
-          </label>
-         {/* Hidden file input */}
+          <label className="block text-gray-700 font-semibold">Content</label>
+          {/* Hidden file input */}
           <input
             type="file"
             ref={fileInputRef}
@@ -260,6 +253,16 @@ export default function NoteForm() {
 
           <button
             type="button"
+            onClick={() => setShowPad((s) => !s)}
+            className="bg-purple-600 ml-10 px-4 py-2 rounded-2xl transition-all duration-300 hover:bg-purple-700 cursor-pointer flex items-center justify-center"
+          >
+            <p className="font-bold">
+              {showPad ? "🧾 Hide Ink Pad" : "🖊️ Handwriting Pad"}
+            </p>
+          </button>
+
+          <button
+            type="button"
             onClick={handleHandwritingButtonClick}
             className="bg-blue-600 ml-10 px-4 py-2 rounded-2xl transition-all duration-300 hover:bg-blue-700 cursor-pointer flex items-center justify-center"
           >
@@ -273,25 +276,128 @@ export default function NoteForm() {
           >
             <p className="font-bold">🎙️ Voice to Text</p>
           </button>
-        </div>        
+        </div>
       </div>
       <div className=" text-white p-12">
-            <div className="max-w-3xl mx-auto space-y-8">
-              <header className="space-y-2">
-                <h1 className="text-4xl font-light tracking-tighter"></h1>
-                <p className="text-zinc-500 text-sm"></p>
-              </header>
-      
-              <Tiptap content={content}
-              onChange={(newHtml) => setContent(newHtml)} />
-            </div>
-          </div>
+        <div className="max-w-3xl mx-auto space-y-8">
+          <header className="space-y-2">
+            <h1 className="text-4xl font-light tracking-tighter"></h1>
+            <p className="text-zinc-500 text-sm"></p>
+          </header>
+
+          {showPad && (
+            <HandwritingPad
+              disabled={loading}
+              onSaveInk={async (blob) => {
+                setLoading(true);
+                setMessage("Saving handwriting...");
+
+                try {
+                  const file = new File(
+                    [blob],
+                    `handwriting-${Date.now()}.png`,
+                    {
+                      type: "image/png",
+                    },
+                  );
+
+                  const fd = new FormData();
+                  fd.append("file", file);
+
+                  const res = await fetch("/api/upload", {
+                    method: "POST",
+                    body: fd,
+                  });
+
+                  const json = await res.json().catch(() => null);
+
+                  if (!res.ok) {
+                    setMessage(
+                      "Save ink failed: " + (json?.error ?? "Unknown error"),
+                    );
+                    return;
+                  }
+
+                  const imgPath = json?.path as string | undefined;
+                  if (!imgPath) {
+                    setMessage("Save ink failed: upload returned no path");
+                    return;
+                  }
+
+                  // Insert into TipTap HTML
+                  const imgHtml = `<p></p><img src="${imgPath}" alt="handwriting" />`;
+                  setContent((prev) => (prev ? prev + imgHtml : imgHtml));
+
+                  setMessage("Handwriting saved and inserted into the note.");
+                } catch (e: any) {
+                  setMessage("Save ink error: " + String(e?.message ?? e));
+                } finally {
+                  setLoading(false);
+                }
+              }}
+              onOcr={async (blob) => {
+                // Call your Cloudinary OCR route (FormData based)
+                setLoading(true);
+                setMessage("Running handwriting OCR...");
+
+                try {
+                  const file = new File(
+                    [blob],
+                    `handwriting-${Date.now()}.png`,
+                    {
+                      type: "image/png",
+                    },
+                  );
+
+                  const fd = new FormData();
+                  fd.append("file", file);
+                  fd.append("title", title || ""); // optional
+                  fd.append("course", course || ""); // optional
+                  fd.append("topic", topic || ""); // optional
+
+                  const res = await fetch("/api/handwriting-ocr", {
+                    method: "POST",
+                    body: fd,
+                  });
+
+                  const json = await res.json();
+                  if (!res.ok) throw new Error(json?.error ?? "OCR failed");
+
+                  const text = (json?.text as string) || "";
+
+                  // TipTap is HTML-based -> escape then insert
+                  const escaped = text
+                    .replaceAll("&", "&amp;")
+                    .replaceAll("<", "&lt;")
+                    .replaceAll(">", "&gt;");
+
+                  setContent((prev) =>
+                    prev
+                      ? prev + `<p></p><pre>${escaped}</pre>`
+                      : `<pre>${escaped}</pre>`,
+                  );
+
+                  setMessage("OCR text inserted into the editor.");
+                } catch (e: any) {
+                  setMessage("OCR error: " + String(e?.message ?? e));
+                } finally {
+                  setLoading(false);
+                }
+              }}
+            />
+          )}
+
+          <Tiptap
+            content={content}
+            onChange={(newHtml) => setContent(newHtml)}
+          />
+        </div>
+      </div>
 
       {/* Submit Button */}
       <button
         type="submit"
         disabled={loading}
-        
         className="w-full bg-blue-600 text-white font-extrabold py-4 rounded-xl shadow-lg hover:bg-blue-700 transition duration-300 ease-in-out transform hover:scale-[1.005] disabled:bg-gray-400 disabled:shadow-none"
       >
         {loading ? "Publishing Note..." : "🚀 Publish Note to Acadex"}
