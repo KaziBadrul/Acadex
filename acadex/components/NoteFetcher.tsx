@@ -19,11 +19,13 @@ interface NoteData {
   created_at: string;
   type: string | null; // <-- NEW
   file_url: string | null; // <-- NEW
+  author_id: string; // To check ownership
   profiles: { username: string } | { username: string }[] | null;
 }
 
 export default function NoteFetcher({ noteId }: NoteFetcherProps) {
   const [note, setNote] = useState<NoteData | null>(null);
+  const [sessionUser, setSessionUser] = useState<{ id: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -40,6 +42,7 @@ export default function NoteFetcher({ noteId }: NoteFetcherProps) {
         router.push("/login");
         return;
       }
+      setSessionUser(session.user);
 
       // 2. Fetch note (include type + file_url)
       const { data: noteData, error: fetchError } = await supabase
@@ -54,6 +57,7 @@ export default function NoteFetcher({ noteId }: NoteFetcherProps) {
           created_at,
           type,
           file_url,
+          author_id,
           profiles(username)
         `
         )
@@ -120,8 +124,28 @@ export default function NoteFetcher({ noteId }: NoteFetcherProps) {
         </div>
 
         {/* ===== CONTENT ===== */}
+        {/* ===== CONTENT ===== */}
         {isPdf ? (
-          <div className="bg-white rounded-xl shadow p-4">
+          <div className="bg-white rounded-xl shadow p-4 relative">
+            {/* Delete button for PDF */}
+            {sessionUser?.id === note.author_id && (
+              <button
+                onClick={async () => {
+                  if (!confirm("Are you sure you want to delete this note?")) return;
+                  const { error } = await supabase.from("notes").delete().eq("id", noteId);
+                  if (error) {
+                    alert("Error deleting note");
+                    console.error(error);
+                  } else {
+                    router.push("/dashboard");
+                  }
+                }}
+                className="absolute top-4 right-4 z-10 p-2 text-white bg-red-600 hover:bg-red-700 rounded-md shadow transition"
+              >
+                Delete Note
+              </button>
+            )}
+
             <div className="flex justify-between items-center mb-3">
               <p className="text-sm text-gray-500">PDF Document</p>
               <a
@@ -141,7 +165,27 @@ export default function NoteFetcher({ noteId }: NoteFetcherProps) {
             />
           </div>
         ) : (
-          <MarkdownRenderer markdown={note.content ?? ""} />
+          <div className="relative">
+            {/* Delete button for Markdown Note */}
+            {sessionUser?.id === note.author_id && (
+              <button
+                onClick={async () => {
+                  if (!confirm("Are you sure you want to delete this note?")) return;
+                  const { error } = await supabase.from("notes").delete().eq("id", noteId);
+                  if (error) {
+                    alert("Error deleting note");
+                    console.error(error);
+                  } else {
+                    router.push("/dashboard");
+                  }
+                }}
+                className="absolute -top-12 right-0 p-2 text-white bg-red-600 hover:bg-red-700 rounded-md shadow transition"
+              >
+                Delete Note
+              </button>
+            )}
+            <MarkdownRenderer markdown={note.content ?? ""} />
+          </div>
         )}
       </div>
     </div>

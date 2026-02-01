@@ -65,7 +65,17 @@ export default function DashboardPage() {
     fetchData();
   }, [router, supabase]);
 
+  const deleteNote = async (id: number) => {
+    if (!confirm("Are you sure you want to delete this note?")) return;
 
+    const { error } = await supabase.from("notes").delete().eq("id", id);
+    if (error) {
+      alert("Error deleting note");
+      console.error(error);
+    } else {
+      setNotes((prev) => prev.filter((n) => n.id !== id));
+    }
+  };
 
   // ---------- FILTER + SEARCH ----------
   const pdfCount = notes.filter((n) => n.type === "pdf").length;
@@ -245,43 +255,93 @@ export default function DashboardPage() {
               const isPdf = note.type === "pdf";
               const isScanned = note.type === "scanned";
 
+              const isOwner = user.id === note.author_id;
+
               return (
-                <Link
-                  key={note.id}
-                  href={`/notes/${note.id}`}
-                  className="block"
-                >
-                  <div className="bg-white p-5 rounded-lg shadow hover:shadow-md transition">
-                    <h3 className="text-xl font-bold text-blue-600">
-                      {note.title}
-                    </h3>
+                <div key={note.id} className="relative group">
+                  <Link
+                    href={`/notes/${note.id}`}
+                    className="block"
+                  >
+                    <div className="bg-white p-5 rounded-lg shadow hover:shadow-md transition">
+                      <div className="flex items-center gap-2">
+                        {isOwner && (
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            className="text-blue-600"
+                          >
+                            <title>You created this note</title>
+                            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+                            <circle cx="12" cy="7" r="4" />
+                          </svg>
+                        )}
+                        <h3 className="text-xl font-bold text-blue-600">
+                          {note.title}
+                        </h3>
+                      </div>
 
-                    <p className="text-sm text-gray-500 mt-1 flex flex-wrap items-center gap-1">
-                      <span className="font-semibold">Course:</span>
-                      {note.course}
-                      <span>|</span>
+                      <p className="text-sm text-gray-500 mt-1 flex flex-wrap items-center gap-1">
+                        <span className="font-semibold">Course:</span>
+                        {note.course}
+                        <span>|</span>
 
-                      <span className="font-semibold">Topic:</span>
-                      {note.topic}
+                        <span className="font-semibold">Topic:</span>
+                        {note.topic}
 
-                      {isPdf && (
-                        <span className="ml-2 px-2 py-0.5 text-xs font-semibold border border-red-500 text-red-600 rounded">
-                          PDF
-                        </span>
-                      )}
+                        {isPdf && (
+                          <span className="ml-2 px-2 py-0.5 text-xs font-semibold border border-red-500 text-red-600 rounded">
+                            PDF
+                          </span>
+                        )}
 
-                      {isScanned && (
-                        <span className="ml-2 px-2 py-0.5 text-xs font-semibold border border-green-500 text-green-600 rounded">
-                          Scanned
-                        </span>
-                      )}
+                        {isScanned && (
+                          <span className="ml-2 px-2 py-0.5 text-xs font-semibold border border-green-500 text-green-600 rounded">
+                            Scanned
+                          </span>
+                        )}
 
-                      <span>|</span>
-                      <span className="font-semibold">Created:</span>
-                      {new Date(note.created_at).toLocaleDateString()}
-                    </p>
-                  </div>
-                </Link>
+                        <span>|</span>
+                        <span className="font-semibold">Created:</span>
+                        {new Date(note.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </Link>
+
+                  {isOwner && (
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        deleteNote(note.id);
+                      }}
+                      className="absolute top-4 right-4 p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full transition-colors opacity-0 group-hover:opacity-100"
+                      title="Delete Note"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M3 6h18" />
+                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
               );
             })}
           </div>
@@ -289,8 +349,9 @@ export default function DashboardPage() {
           <div className="p-10 text-center text-gray-500 bg-white rounded-lg shadow">
             No notes match your filter or search.
           </div>
-        )}
-      </div>
-    </div>
+        )
+        }
+      </div >
+    </div >
   );
 }
