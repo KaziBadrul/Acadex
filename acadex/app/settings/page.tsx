@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
 import Link from 'next/link';
+import { updateProfile, getProfile } from './actions';
 
 export default function SettingsPage() {
     const [user, setUser] = useState<{ id: string; email?: string; username: string } | null>(null);
@@ -21,11 +22,8 @@ export default function SettingsPage() {
                 return;
             }
 
-            const { data: profile } = await supabase
-                .from('profiles')
-                .select('username')
-                .eq('id', user.id)
-                .single();
+            // Fetch profile using server action (bypasses RLS)
+            const profile = await getProfile(user.id);
 
             setUser({
                 id: user.id,
@@ -84,7 +82,32 @@ export default function SettingsPage() {
                     <div className="space-y-3">
                         <div>
                             <label className="block text-sm text-gray-500 dark:text-gray-400">Username</label>
-                            <p className="font-medium text-lg">{user?.username}</p>
+                            <div className="flex gap-2 items-center">
+                                <input
+                                    type="text"
+                                    value={user?.username || ''}
+                                    onChange={(e) => setUser(prev => prev ? { ...prev, username: e.target.value } : null)}
+                                    className="font-medium text-lg bg-transparent border-b border-gray-300 dark:border-gray-600 focus:border-blue-500 outline-none w-full"
+                                />
+                                <button
+                                    onClick={async () => {
+                                        if (!user?.username) return;
+
+                                        const { success, error } = await updateProfile(user.id, user.username);
+
+                                        if (!success) {
+                                            alert('Error updating username: ' + error);
+                                        } else {
+                                            alert('Username updated successfully!');
+                                            // Force reload to update global state/warnings if needed
+                                            window.location.reload();
+                                        }
+                                    }}
+                                    className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition"
+                                >
+                                    Save
+                                </button>
+                            </div>
                         </div>
                         <div>
                             <label className="block text-sm text-gray-500 dark:text-gray-400">Email</label>

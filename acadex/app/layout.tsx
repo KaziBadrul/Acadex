@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import ThemeProvider from "@/components/theme-provider";
 import BackButton from "@/components/BackButton";
+import UsernameWarning from "@/components/UsernameWarning";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,6 +32,7 @@ export default function RootLayout({
       >
         <ThemeProvider>
           <BackButton />
+          {/* <UsernameWarning /> */}
           {children}
         </ThemeProvider>
       </body>

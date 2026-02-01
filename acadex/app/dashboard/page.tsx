@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import Link from "next/link";
+import { getProfile } from "../settings/actions";
 
 interface Note {
   id: number;
@@ -42,11 +43,8 @@ export default function DashboardPage() {
         return;
       }
 
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("username")
-        .eq("id", user.id)
-        .single();
+      // Use server action to bypass RLS for reading profile
+      const profile = await getProfile(user.id);
 
       setUser({ id: user.id, username: profile?.username || "User" });
 
@@ -191,8 +189,9 @@ export default function DashboardPage() {
           </div>
 
           <div className="bg-white p-6 rounded-xl shadow-lg border-l-4 border-yellow-500">
-            <p className="text-sm font-medium text-gray-500">User ID</p>
-            <p className="font-mono text-sm truncate">{user.id}</p>
+            <p className="text-sm font-medium text-gray-500">User Profile</p>
+            <p className="font-bold text-lg text-gray-900">{user.username}</p>
+            <p className="font-mono text-sm truncate text-gray-400">ID: {user.id}</p>
           </div>
         </div>
 
