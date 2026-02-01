@@ -1,5 +1,5 @@
 # Acadex
-
+<img src="./public/acadexLogo.png" alt="Acadex Logo" width="500" /> <br/>
 Acadex is a unified workspace designed to streamline your productivity with notes, resources, and scheduling tools. Built with modern web technologies, it offers a seamless experience for managing your academic and personal life.
 
 ## Features

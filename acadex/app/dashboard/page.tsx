@@ -100,9 +100,10 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-gray-50 py-10">
       <div className="max-w-6xl mx-auto px-4">
         {/* Header */}
+
         <div className="flex justify-between items-center mb-8 border-b pb-4">
           <h1 className="text-4xl font-bold text-gray-900">
-            Welcome, <span className="text-blue-600">{user.username}!</span>
+            <img src="/acadexLogo.png" alt="Acadex Logo" width="200" />
           </h1>
           <button
             onClick={handleLogout}
@@ -184,10 +185,9 @@ export default function DashboardPage() {
             <button
               onClick={() => setFilter("all")}
               className={`px-3 py-1 text-sm font-semibold rounded border
-                ${
-                  filter === "all"
-                    ? "bg-blue-600 text-white border-blue-600"
-                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
+                ${filter === "all"
+                  ? "bg-blue-600 text-white border-blue-600"
+                  : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
                 }
               `}
             >
@@ -197,10 +197,9 @@ export default function DashboardPage() {
             <button
               onClick={() => setFilter("notes")}
               className={`px-3 py-1 text-sm font-semibold rounded border
-                ${
-                  filter === "notes"
-                    ? "bg-blue-600 text-white border-blue-600"
-                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
+                ${filter === "notes"
+                  ? "bg-blue-600 text-white border-blue-600"
+                  : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
                 }
               `}
             >
@@ -210,10 +209,9 @@ export default function DashboardPage() {
             <button
               onClick={() => setFilter("pdfs")}
               className={`px-3 py-1 text-sm font-semibold rounded border
-                ${
-                  filter === "pdfs"
-                    ? "bg-blue-600 text-white border-blue-600"
-                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
+                ${filter === "pdfs"
+                  ? "bg-blue-600 text-white border-blue-600"
+                  : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
                 }
               `}
             >
