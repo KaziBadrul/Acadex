@@ -22,7 +22,7 @@ export default function DashboardPage() {
   const [notes, setNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<{ id: string; username: string } | null>(
-    null
+    null,
   );
 
   const [filter, setFilter] = useState<FilterType>("all");
