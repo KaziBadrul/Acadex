@@ -4,6 +4,7 @@ import "./globals.css";
 import ThemeProvider from "@/components/theme-provider";
 import BackButton from "@/components/BackButton";
 import UsernameWarning from "@/components/UsernameWarning";
+import ReminderNotificationProvider from "@/components/ReminderNotificationProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,9 +32,11 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <ThemeProvider>
-          <BackButton />
-          {/* <UsernameWarning /> */}
-          {children}
+          <ReminderNotificationProvider>
+            <BackButton />
+            {/* <UsernameWarning /> */}
+            {children}
+          </ReminderNotificationProvider>
         </ThemeProvider>
       </body>
     </html>

@@ -45,11 +45,16 @@ export default function SetReminderPage() {
     setLoading(true);
     setError(null);
 
+    // Convert local datetime to ISO string with timezone offset
+    // This ensures that "21:00" local time is stored as the correct UTC instant
+    const dateObj = new Date(remindAt);
+    const isoString = dateObj.toISOString();
+
     const { error: insertError } = await supabase.from("reminders").insert({
       creator_id: user.id,
       title,
       description,
-      remind_at: remindAt,
+      remind_at: isoString,
       priority,
       is_public: true,
     });

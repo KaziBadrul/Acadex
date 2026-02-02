@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
+import { useReminderNotifications } from "@/components/ReminderNotificationProvider";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -22,11 +23,12 @@ type Reminder = {
 function priorityBadge(priority: Reminder["priority"]) {
   const base = "text-xs font-semibold px-2 py-1 rounded-full";
   if (priority === "high") return `${base} bg-red-100 text-red-700`;
-  if (priority === "low") return `${base} bg-gray-100 text-gray-700`;
-  return `${base} bg-yellow-100 text-yellow-800`;
+  if (priority === "medium") return `${base} bg-blue-100 text-blue-700`;
+  return `${base} bg-green-100 text-green-700`;
 }
 
 export default function RemindersPage() {
+  const { checkReminders } = useReminderNotifications();
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -51,6 +53,9 @@ export default function RemindersPage() {
     }
 
     setReminders((data ?? []) as Reminder[]);
+
+    // Check for any reminders that need notifications
+    checkReminders();
   }
 
   useEffect(() => {
