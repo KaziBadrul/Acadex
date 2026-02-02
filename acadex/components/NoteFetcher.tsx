@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import MarkdownRenderer from "./MarkdownRenderer";
+import VoteButtons from "./VoteButtons";
 
 interface NoteFetcherProps {
   noteId: number;
@@ -121,6 +122,9 @@ export default function NoteFetcher({ noteId }: NoteFetcherProps) {
           <p className="text-sm mt-1">
             Published: {new Date(note.created_at).toLocaleDateString()}
           </p>
+          <div className="mt-4">
+            <VoteButtons noteId={note.id} />
+          </div>
         </div>
 
         {/* ===== CONTENT ===== */}

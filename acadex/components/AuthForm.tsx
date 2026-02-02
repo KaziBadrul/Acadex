@@ -110,11 +110,10 @@ export default function AuthForm() {
 
       {message && (
         <p
-          className={`text-center mt-4 p-3 rounded-lg border font-medium ${
-            message.includes("Error")
-              ? "bg-red-50 text-red-700 border-red-300"
-              : "bg-green-50 text-green-700 border-green-300"
-          }`}
+          className={`text-center mt-4 p-3 rounded-lg border font-medium ${message.includes("Error")
+            ? "bg-red-50 text-red-700 border-red-300"
+            : "bg-green-50 text-green-700 border-green-300"
+            }`}
         >
           {message}
         </p>
