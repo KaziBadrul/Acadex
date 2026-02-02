@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import Link from "next/link";
 import { getProfile } from "../settings/actions";
 import VoteButtons from "@/components/VoteButtons";
+import { getGroupById } from "../groups/actions";
 
 interface Note {
   id: number;
@@ -16,6 +17,8 @@ interface Note {
   created_at: string;
   author_id: string;
   type: string | null;
+  visibility: string;
+  group_id: string | null;
 }
 
 type FilterType = "all" | "notes" | "pdfs";
@@ -29,9 +32,14 @@ export default function DashboardPage() {
 
   const [filter, setFilter] = useState<FilterType>("all");
   const [search, setSearch] = useState("");
+  const [groupDetail, setGroupDetail] = useState<{ name: string; invite_code: string } | null>(null);
 
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const groupFilter = searchParams.get("group");
   const supabase = createClient();
+
+  const [myGroupIds, setMyGroupIds] = useState<string[]>([]);
 
   /* Vote State */
   const [voteData, setVoteData] = useState<Record<number, { up: number; down: number; userVote: 1 | -1 | null }>>({});
@@ -52,16 +60,51 @@ export default function DashboardPage() {
 
       setUser({ id: user.id, username: profile?.username || "User" });
 
+      // 1. Fetch user's groups to filter group notes
+      const { data: memberships } = await supabase
+        .from("group_members")
+        .select("group_id")
+        .eq("user_id", user.id);
+
+      const groupIds = memberships?.map((m: any) => m.group_id) || [];
+      setMyGroupIds(groupIds);
+
+      // 1.5 Fetch group detail if filtering
+      if (groupFilter) {
+        const detail = await getGroupById(groupFilter);
+        setGroupDetail(detail);
+      } else {
+        setGroupDetail(null);
+      }
+
+      // 2. Fetch all notes (we will filter in JS for now or redo query if too many)
+      // Since user wants to bypass RLS, we get all and filter by logic.
       const { data: allNotes, error } = await supabase
         .from("notes")
         .select("*")
         .order("created_at", { ascending: false });
 
       if (!error && allNotes) {
-        setNotes(allNotes as Note[]);
+        const filtered = allNotes.filter((note: any) => {
+          // Basic visibility rules
+          let hasAccess = false;
+          if (note.visibility === "public") hasAccess = true;
+          else if (note.visibility === "private") hasAccess = note.author_id === user.id;
+          else if (note.visibility === "group") {
+            hasAccess = groupIds.includes(note.group_id) || note.author_id === user.id;
+          }
 
-        // --- Fetch Votes for all notes ---
-        const noteIds = allNotes.map((n) => n.id);
+          if (!hasAccess) return false;
+
+          // Optional group filter from URL
+          if (groupFilter && note.group_id !== groupFilter) return false;
+
+          return true;
+        });
+        setNotes(filtered as Note[]);
+
+        // --- Fetch Votes for filtered notes ---
+        const noteIds = filtered.map((n: any) => n.id);
         if (noteIds.length > 0) {
           const { data: votes } = await supabase
             .from("note_votes")
@@ -71,13 +114,12 @@ export default function DashboardPage() {
           if (votes) {
             const vData: Record<number, { up: number; down: number; userVote: 1 | -1 | null }> = {};
 
-            // Initialize
             noteIds.forEach(id => {
               vData[id] = { up: 0, down: 0, userVote: null };
             });
 
             votes.forEach(v => {
-              if (!vData[v.note_id]) return; // specific note redundant check
+              if (!vData[v.note_id]) return;
 
               if (v.vote_type === 1) vData[v.note_id].up++;
               else if (v.vote_type === -1) vData[v.note_id].down++;
@@ -96,7 +138,7 @@ export default function DashboardPage() {
     }
 
     fetchData();
-  }, [router, supabase]);
+  }, [router, supabase, groupFilter]);
 
   const deleteNote = async (id: number) => {
     if (!confirm("Are you sure you want to delete this note?")) return;
@@ -220,6 +262,12 @@ export default function DashboardPage() {
               >
                 🔔 View Reminder
               </Link>
+              <Link
+                href="/groups"
+                className="block text-green-500 font-bold hover:underline"
+              >
+                👥 Manage Groups
+              </Link>
             </div>
           </div>
 
@@ -231,9 +279,16 @@ export default function DashboardPage() {
         </div>
 
         {/* --- Notes List --- */}
-        <h2 className="text-2xl font-semibold text-gray-800 mb-3 border-b pb-2">
-          All Available Notes
-        </h2>
+        <div className="mb-6">
+          <h2 className="text-2xl font-semibold text-gray-800 border-b pb-2">
+            {groupDetail ? `📚 ${groupDetail.name} Notes` : "All Available Notes"}
+          </h2>
+          {groupDetail && (
+            <p className="text-sm text-gray-500 mt-2">
+              Invite Code: <span className="font-mono font-bold bg-gray-100 px-1 rounded">{groupDetail.invite_code}</span>
+            </p>
+          )}
+        </div>
 
         {/* --- Filters + Search --- */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
@@ -340,6 +395,13 @@ export default function DashboardPage() {
                           Scanned
                         </span>
                       )}
+
+                      <span className={`ml-2 px-2 py-0.5 text-xs font-semibold rounded border ${note.visibility === 'private' ? 'border-orange-500 text-orange-600' :
+                        note.visibility === 'group' ? 'border-purple-500 text-purple-600' :
+                          'border-blue-300 text-blue-500'
+                        }`}>
+                        {note.visibility.toUpperCase()}
+                      </span>
 
                       <span>|</span>
                       <span className="font-semibold">Created:</span>

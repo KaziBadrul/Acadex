@@ -18,6 +18,9 @@ export default function UploadNotePage() {
   const [loading, setLoading] = useState(false);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [visibility, setVisibility] = useState("public");
+  const [groupId, setGroupId] = useState("");
+  const [userGroups, setUserGroups] = useState<any[]>([]);
 
   // 🔐 Auth check
   useEffect(() => {
@@ -32,6 +35,16 @@ export default function UploadNotePage() {
       }
 
       setUser({ id: user.id });
+
+      // Fetch user groups
+      const { data: memberships } = await supabase
+        .from("group_members")
+        .select("groups(id, name)")
+        .eq("user_id", user.id);
+
+      if (memberships) {
+        setUserGroups(memberships.map((m: any) => m.groups));
+      }
     }
 
     checkAuth();
@@ -56,6 +69,8 @@ export default function UploadNotePage() {
     formData.append("course", course);
     formData.append("topic", topic);
     formData.append("author_id", user.id);
+    formData.append("visibility", visibility);
+    formData.append("group_id", groupId);
 
     try {
       const res = await fetch("/api/uploadpdf", {
@@ -148,6 +163,43 @@ export default function UploadNotePage() {
                 onChange={(e) => setTopic(e.target.value)}
               />
             </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Visibility
+              </label>
+              <select
+                value={visibility}
+                onChange={(e) => setVisibility(e.target.value)}
+                className="w-full border rounded-lg p-2 bg-white"
+              >
+                <option value="public">Public (Everyone can see)</option>
+                <option value="private">Private (Only you can see)</option>
+                <option value="group">Group (Only members can see)</option>
+              </select>
+            </div>
+            {visibility === "group" && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Select Group
+                </label>
+                <select
+                  value={groupId}
+                  onChange={(e) => setGroupId(e.target.value)}
+                  required={visibility === "group"}
+                  className="w-full border rounded-lg p-2 bg-white"
+                >
+                  <option value="">-- Choose a Group --</option>
+                  {userGroups.map((g) => (
+                    <option key={g.id} value={g.id}>
+                      {g.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
 
           <div>

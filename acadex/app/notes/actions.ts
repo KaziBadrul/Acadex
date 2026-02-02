@@ -97,3 +97,31 @@ export async function voteNote(noteId: number, voteType: 1 | -1, path: string) {
     revalidatePath(path);
     return { success: true };
 }
+
+export async function getNote(noteId: number) {
+    const { data: note, error } = await supabaseServer
+        .from("notes")
+        .select(`
+            id,
+            title,
+            content,
+            course,
+            topic,
+            created_at,
+            type,
+            file_url,
+            author_id,
+            visibility,
+            group_id,
+            profiles(username)
+        `)
+        .eq("id", noteId)
+        .single();
+
+    if (error) {
+        console.error("getNote error:", error);
+        return { error: error.message };
+    }
+
+    return { note };
+}

@@ -10,10 +10,14 @@ import HandwritingPad from "./HandwritingPad";
 // import ReactMarkdown from 'react-markdown' // Uncomment if you want an in-page preview
 
 export default function NoteForm() {
+  const supabase = createClient();
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [course, setCourse] = useState("");
   const [topic, setTopic] = useState("");
+  const [visibility, setVisibility] = useState("public");
+  const [groupId, setGroupId] = useState("");
+  const [userGroups, setUserGroups] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [showPad, setShowPad] = useState(false);
@@ -26,7 +30,23 @@ export default function NoteForm() {
       setContent((prev) => (prev ? prev + "\n\n" + transcript : transcript));
       localStorage.removeItem("voice_transcript");
     }
-  }, []);
+
+    // Fetch user groups for visibility selection
+    async function loadGroups() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: memberships } = await supabase
+          .from("group_members")
+          .select("groups(id, name)")
+          .eq("user_id", user.id);
+
+        if (memberships) {
+          setUserGroups(memberships.map((m: any) => m.groups));
+        }
+      }
+    }
+    loadGroups();
+  }, [supabase]);
 
   const router = useRouter();
 
@@ -120,8 +140,6 @@ export default function NoteForm() {
     }
   };
 
-  // const router = useRouter();
-  const supabase = createClient();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -145,6 +163,8 @@ export default function NoteForm() {
       content: content,
       course: course.trim(),
       topic: topic.trim(),
+      visibility: visibility,
+      group_id: visibility === "group" ? (groupId || null) : null,
     };
 
     const { error } = await supabase.from("notes").insert([newNote]);
@@ -176,11 +196,10 @@ export default function NoteForm() {
 
       {message && (
         <div
-          className={`p-4 rounded-lg text-center font-medium border ${
-            message.includes("Error")
-              ? "bg-red-50 text-red-700 border-red-300"
-              : "bg-green-50 text-green-700 border-green-300"
-          }`}
+          className={`p-4 rounded-lg text-center font-medium border ${message.includes("Error")
+            ? "bg-red-50 text-red-700 border-red-300"
+            : "bg-green-50 text-green-700 border-green-300"
+            }`}
         >
           {message}
         </div>
@@ -229,6 +248,47 @@ export default function NoteForm() {
             className="w-full p-4 border border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition duration-150 shadow-sm"
           />
         </div>
+      </div>
+
+      {/* Visibility */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-black">
+        <div>
+          <label className="block text-gray-700 font-semibold mb-2">
+            Visibility
+          </label>
+          <select
+            value={visibility}
+            onChange={(e) => setVisibility(e.target.value)}
+            className="w-full p-4 border border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition duration-150 shadow-sm bg-white"
+          >
+            <option value="public">Public (Everyone can see)</option>
+            <option value="private">Private (Only you can see)</option>
+            <option value="group">Group (Only members can see)</option>
+          </select>
+        </div>
+        {visibility === "group" && (
+          <div>
+            <label className="block text-gray-700 font-semibold mb-2">
+              Select Group
+            </label>
+            <select
+              value={groupId}
+              onChange={(e) => setGroupId(e.target.value)}
+              required={visibility === "group"}
+              className="w-full p-4 border border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition duration-150 shadow-sm bg-white"
+            >
+              <option value="">-- Choose a Group --</option>
+              {userGroups.map((g) => (
+                <option key={g.id} value={g.id}>
+                  {g.name}
+                </option>
+              ))}
+            </select>
+            {userGroups.length === 0 && (
+              <p className="text-xs text-red-500 mt-1">You are not in any groups. Join one first!</p>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Content (Markdown Editor Area) */}
