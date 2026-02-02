@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import Link from "next/link";
 import { getProfile } from "../settings/actions";
+import VoteButtons from "@/components/VoteButtons";
 
 interface Note {
   id: number;
@@ -32,6 +33,9 @@ export default function DashboardPage() {
   const router = useRouter();
   const supabase = createClient();
 
+  /* Vote State */
+  const [voteData, setVoteData] = useState<Record<number, { up: number; down: number; userVote: 1 | -1 | null }>>({});
+
   useEffect(() => {
     async function fetchData() {
       const {
@@ -55,6 +59,37 @@ export default function DashboardPage() {
 
       if (!error && allNotes) {
         setNotes(allNotes as Note[]);
+
+        // --- Fetch Votes for all notes ---
+        const noteIds = allNotes.map((n) => n.id);
+        if (noteIds.length > 0) {
+          const { data: votes } = await supabase
+            .from("note_votes")
+            .select("*")
+            .in("note_id", noteIds);
+
+          if (votes) {
+            const vData: Record<number, { up: number; down: number; userVote: 1 | -1 | null }> = {};
+
+            // Initialize
+            noteIds.forEach(id => {
+              vData[id] = { up: 0, down: 0, userVote: null };
+            });
+
+            votes.forEach(v => {
+              if (!vData[v.note_id]) return; // specific note redundant check
+
+              if (v.vote_type === 1) vData[v.note_id].up++;
+              else if (v.vote_type === -1) vData[v.note_id].down++;
+
+              if (v.user_id === user.id) {
+                vData[v.note_id].userVote = v.vote_type as 1 | -1;
+              }
+            });
+
+            setVoteData(vData);
+          }
+        }
       }
 
       setLoading(false);
@@ -257,62 +292,69 @@ export default function DashboardPage() {
               const isOwner = user.id === note.author_id;
 
               return (
-                <div key={note.id} className="relative group">
+                <div key={note.id} className="relative group bg-white rounded-lg shadow hover:shadow-md transition">
                   <Link
                     href={`/notes/${note.id}`}
-                    className="block"
+                    className="block p-5 pb-2"
                   >
-                    <div className="bg-white p-5 rounded-lg shadow hover:shadow-md transition">
-                      <div className="flex items-center gap-2">
-                        {isOwner && (
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="24"
-                            height="24"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="text-blue-600"
-                          >
-                            <title>You created this note</title>
-                            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
-                            <circle cx="12" cy="7" r="4" />
-                          </svg>
-                        )}
-                        <h3 className="text-xl font-bold text-blue-600">
-                          {note.title}
-                        </h3>
-                      </div>
+                    <div className="flex items-center gap-2">
+                      {isOwner && (
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="24"
+                          height="24"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className="text-blue-600"
+                        >
+                          <title>You created this note</title>
+                          <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+                          <circle cx="12" cy="7" r="4" />
+                        </svg>
+                      )}
+                      <h3 className="text-xl font-bold text-blue-600">
+                        {note.title}
+                      </h3>
+                    </div>
 
-                      <p className="text-sm text-gray-500 mt-1 flex flex-wrap items-center gap-1">
-                        <span className="font-semibold">Course:</span>
-                        {note.course}
-                        <span>|</span>
+                    <div className="text-sm text-gray-500 mt-1 flex flex-wrap items-center gap-1">
+                      <span className="font-semibold">Course:</span>
+                      {note.course}
+                      <span>|</span>
 
-                        <span className="font-semibold">Topic:</span>
-                        {note.topic}
+                      <span className="font-semibold">Topic:</span>
+                      {note.topic}
 
-                        {isPdf && (
-                          <span className="ml-2 px-2 py-0.5 text-xs font-semibold border border-red-500 text-red-600 rounded">
-                            PDF
-                          </span>
-                        )}
+                      {isPdf && (
+                        <span className="ml-2 px-2 py-0.5 text-xs font-semibold border border-red-500 text-red-600 rounded">
+                          PDF
+                        </span>
+                      )}
 
-                        {isScanned && (
-                          <span className="ml-2 px-2 py-0.5 text-xs font-semibold border border-green-500 text-green-600 rounded">
-                            Scanned
-                          </span>
-                        )}
+                      {isScanned && (
+                        <span className="ml-2 px-2 py-0.5 text-xs font-semibold border border-green-500 text-green-600 rounded">
+                          Scanned
+                        </span>
+                      )}
 
-                        <span>|</span>
-                        <span className="font-semibold">Created:</span>
-                        {new Date(note.created_at).toLocaleDateString()}
-                      </p>
+                      <span>|</span>
+                      <span className="font-semibold">Created:</span>
+                      {new Date(note.created_at).toLocaleDateString()}
                     </div>
                   </Link>
+
+                  <div className="px-5 pb-4 flex justify-between">
+                    <VoteButtons
+                      noteId={note.id}
+                      initialUpvotes={voteData[note.id]?.up || 0}
+                      initialDownvotes={voteData[note.id]?.down || 0}
+                      initialUserVote={voteData[note.id]?.userVote || null}
+                    />
+                  </div>
 
                   {isOwner && (
                     <button
