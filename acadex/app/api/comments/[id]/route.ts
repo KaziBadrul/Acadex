@@ -5,11 +5,12 @@ import { NextRequest, NextResponse } from "next/server";
 // PATCH /api/comments/[id] - Update a comment
 export async function PATCH(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    context: { params: Promise<{ id: string }> }
 ) {
     try {
-        const supabase = createClient();
-        const commentId = parseInt(params.id, 10);
+        const supabase = await createClient();
+        const { id } = await context.params;
+        const commentId = parseInt(id, 10);
 
         if (isNaN(commentId)) {
             return NextResponse.json(
@@ -98,11 +99,12 @@ export async function PATCH(
 // DELETE /api/comments/[id] - Delete a comment
 export async function DELETE(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    context: { params: Promise<{ id: string }> }
 ) {
     try {
-        const supabase = createClient();
-        const commentId = parseInt(params.id, 10);
+        const supabase = await createClient();
+        const { id } = await context.params;
+        const commentId = parseInt(id, 10);
 
         if (isNaN(commentId)) {
             return NextResponse.json(

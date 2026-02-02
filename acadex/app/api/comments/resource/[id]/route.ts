@@ -5,11 +5,12 @@ import { NextRequest, NextResponse } from "next/server";
 // GET /api/comments/resource/[id] - Fetch all comments for a resource
 export async function GET(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    context: { params: Promise<{ id: string }> }
 ) {
     try {
-        const supabase = createClient();
-        const resourceId = parseInt(params.id, 10);
+        const supabase = await createClient();
+        const { id } = await context.params;
+        const resourceId = parseInt(id, 10);
 
         if (isNaN(resourceId)) {
             return NextResponse.json(
@@ -56,11 +57,12 @@ export async function GET(
 // POST /api/comments/resource/[id] - Create a new comment on a resource
 export async function POST(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    context: { params: Promise<{ id: string }> }
 ) {
     try {
-        const supabase = createClient();
-        const resourceId = parseInt(params.id, 10);
+        const supabase = await createClient();
+        const { id } = await context.params;
+        const resourceId = parseInt(id, 10);
 
         if (isNaN(resourceId)) {
             return NextResponse.json(

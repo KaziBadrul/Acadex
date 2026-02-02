@@ -32,10 +32,40 @@ export default function ResourcePage(props: ResourcePageProps) {
     const router = useRouter();
     const supabase = createClient();
 
-    // Extract resource ID from params
-    const resourceId = parseInt(props.params.id, 10);
+    // Extract resource ID from params - handle as async or sync depending on Next.js version
+    // In Next.js 15+, params is a Promise. We need to handle both cases for compatibility.
+    const [resourceId, setResourceId] = useState<number | null>(null);
 
     useEffect(() => {
+        const resolveParams = async () => {
+            try {
+                // Check if params is a promise (Next.js 15+)
+                const resolvedParams = await props.params;
+                const id = parseInt(resolvedParams.id, 10);
+                if (!isNaN(id)) {
+                    setResourceId(id);
+                } else {
+                    setError("Invalid resource ID format");
+                    setLoading(false);
+                }
+            } catch (e) {
+                // Fallback for older Next.js versions where params is just an object
+                const id = parseInt((props.params as any).id, 10);
+                if (!isNaN(id)) {
+                    setResourceId(id);
+                } else {
+                    setError("Invalid resource ID format");
+                    setLoading(false);
+                }
+            }
+        };
+
+        resolveParams();
+    }, [props.params]);
+
+    useEffect(() => {
+        if (resourceId === null) return;
+
         async function fetchResource() {
             // Check authentication
             const {
@@ -47,11 +77,7 @@ export default function ResourcePage(props: ResourcePageProps) {
                 return;
             }
 
-            if (isNaN(resourceId)) {
-                setError("Invalid resource ID");
-                setLoading(false);
-                return;
-            }
+            console.log("Fetching resource with ID:", resourceId);
 
             // Fetch resource details
             const { data: resourceData, error: fetchError } = await supabase
@@ -75,7 +101,7 @@ export default function ResourcePage(props: ResourcePageProps) {
 
             if (fetchError) {
                 console.error("Fetch Error:", fetchError);
-                setError("Resource not found or you do not have permission to view it.");
+                setError(`Error fetching resource: ${fetchError.message}`);
             } else {
                 setResource(resourceData as Resource);
             }
@@ -193,7 +219,7 @@ export default function ResourcePage(props: ResourcePageProps) {
                 )}
 
                 {/* Comments Section */}
-                <ResourceComments resourceId={resourceId} />
+                {resourceId && <ResourceComments resourceId={resourceId} />}
             </div>
         </div>
     );
