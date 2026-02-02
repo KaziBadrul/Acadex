@@ -3,6 +3,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/utils/supabase/client";
 import MarkdownRenderer from "./MarkdownRenderer";
 import VoteButtons from "./VoteButtons";
@@ -142,21 +143,29 @@ export default function NoteFetcher({ noteId }: NoteFetcherProps) {
           <div className="bg-white rounded-xl shadow p-4 relative">
             {/* Delete button for PDF */}
             {sessionUser?.id === note.author_id && (
-              <button
-                onClick={async () => {
-                  if (!confirm("Are you sure you want to delete this note?")) return;
-                  const { error } = await supabase.from("notes").delete().eq("id", noteId);
-                  if (error) {
-                    alert("Error deleting note");
-                    console.error(error);
-                  } else {
-                    router.push("/dashboard");
-                  }
-                }}
-                className="absolute top-4 right-4 z-10 p-2 text-white bg-red-600 hover:bg-red-700 rounded-md shadow transition"
-              >
-                Delete Note
-              </button>
+              <div className="absolute top-4 right-4 z-10 flex gap-2">
+                <Link
+                  href={`/notes/${noteId}/edit`}
+                  className="p-2 text-white bg-blue-600 hover:bg-blue-700 rounded-md shadow transition text-sm font-medium"
+                >
+                  Edit Metadata
+                </Link>
+                <button
+                  onClick={async () => {
+                    if (!confirm("Are you sure you want to delete this note?")) return;
+                    const { error } = await supabase.from("notes").delete().eq("id", noteId);
+                    if (error) {
+                      alert("Error deleting note");
+                      console.error(error);
+                    } else {
+                      router.push("/dashboard");
+                    }
+                  }}
+                  className="p-2 text-white bg-red-600 hover:bg-red-700 rounded-md shadow transition text-sm font-medium"
+                >
+                  Delete Note
+                </button>
+              </div>
             )}
 
             <div className="flex justify-between items-center mb-3">
@@ -181,21 +190,29 @@ export default function NoteFetcher({ noteId }: NoteFetcherProps) {
           <div className="relative">
             {/* Delete button for Markdown Note */}
             {sessionUser?.id === note.author_id && (
-              <button
-                onClick={async () => {
-                  if (!confirm("Are you sure you want to delete this note?")) return;
-                  const { error } = await supabase.from("notes").delete().eq("id", noteId);
-                  if (error) {
-                    alert("Error deleting note");
-                    console.error(error);
-                  } else {
-                    router.push("/dashboard");
-                  }
-                }}
-                className="absolute -top-12 right-0 p-2 text-white bg-red-600 hover:bg-red-700 rounded-md shadow transition"
-              >
-                Delete Note
-              </button>
+              <div className="absolute -top-12 right-0 flex gap-2">
+                <Link
+                  href={`/notes/${noteId}/edit`}
+                  className="p-2 text-white bg-blue-600 hover:bg-blue-700 rounded-md shadow transition text-sm font-medium"
+                >
+                  Edit Note
+                </Link>
+                <button
+                  onClick={async () => {
+                    if (!confirm("Are you sure you want to delete this note?")) return;
+                    const { error } = await supabase.from("notes").delete().eq("id", noteId);
+                    if (error) {
+                      alert("Error deleting note");
+                      console.error(error);
+                    } else {
+                      router.push("/dashboard");
+                    }
+                  }}
+                  className="p-2 text-white bg-red-600 hover:bg-red-700 rounded-md shadow transition text-sm font-medium"
+                >
+                  Delete Note
+                </button>
+              </div>
             )}
             <MarkdownRenderer markdown={note.content ?? ""} />
           </div>

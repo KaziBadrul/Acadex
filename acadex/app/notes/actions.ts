@@ -125,3 +125,62 @@ export async function getNote(noteId: number) {
 
     return { note };
 }
+
+export async function updateNote(noteId: number, data: {
+    title?: string;
+    content?: string;
+    course?: string;
+    topic?: string;
+    visibility?: string;
+    group_id?: string | null;
+}) {
+    // 1. Auth check
+    const cookieStore = await cookies();
+    const supabaseAuth = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+            cookies: {
+                getAll() {
+                    return cookieStore.getAll();
+                },
+                setAll(cookiesToSet) {
+                    try {
+                        cookiesToSet.forEach(({ name, value, options }) =>
+                            cookieStore.set(name, value, options)
+                        )
+                    } catch { }
+                },
+            },
+        }
+    );
+
+    const { data: { user } } = await supabaseAuth.auth.getUser();
+    if (!user) return { error: "Not authenticated" };
+
+    // 2. Fetch current note to verify ownership
+    const { data: existingNote } = await supabaseServer
+        .from("notes")
+        .select("author_id")
+        .eq("id", noteId)
+        .single();
+
+    if (!existingNote || existingNote.author_id !== user.id) {
+        return { error: "You are not authorized to edit this note" };
+    }
+
+    // 3. Update note (Bypass RLS)
+    const { error } = await supabaseServer
+        .from("notes")
+        .update(data)
+        .eq("id", noteId);
+
+    if (error) {
+        console.error("updateNote error:", error);
+        return { error: error.message };
+    }
+
+    revalidatePath(`/notes/${noteId}`);
+    revalidatePath("/dashboard");
+    return { success: true };
+}

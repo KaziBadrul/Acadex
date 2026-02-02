@@ -4,19 +4,32 @@
 import { useRef, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
+import { updateNote } from "@/app/notes/actions";
 import Tiptap from "./Tiptap";
 import HandwritingPad from "./HandwritingPad";
 
 // import ReactMarkdown from 'react-markdown' // Uncomment if you want an in-page preview
 
-export default function NoteForm() {
+interface NoteFormProps {
+  noteId?: number;
+  initialData?: {
+    title: string;
+    content: string;
+    course: string;
+    topic: string;
+    visibility: string;
+    group_id: string | null;
+  };
+}
+
+export default function NoteForm({ noteId, initialData }: NoteFormProps) {
   const supabase = createClient();
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const [course, setCourse] = useState("");
-  const [topic, setTopic] = useState("");
-  const [visibility, setVisibility] = useState("public");
-  const [groupId, setGroupId] = useState("");
+  const [title, setTitle] = useState(initialData?.title || "");
+  const [content, setContent] = useState(initialData?.content || "");
+  const [course, setCourse] = useState(initialData?.course || "");
+  const [topic, setTopic] = useState(initialData?.topic || "");
+  const [visibility, setVisibility] = useState(initialData?.visibility || "public");
+  const [groupId, setGroupId] = useState(initialData?.group_id || "");
   const [userGroups, setUserGroups] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -157,8 +170,7 @@ export default function NoteForm() {
       return;
     }
 
-    const newNote = {
-      author_id: user.id,
+    const noteData = {
       title: title.trim(),
       content: content,
       course: course.trim(),
@@ -167,19 +179,34 @@ export default function NoteForm() {
       group_id: visibility === "group" ? (groupId || null) : null,
     };
 
-    const { error } = await supabase.from("notes").insert([newNote]);
-
-    if (error) {
-      console.error("Database Error:", error);
-      setMessage(`Failed to publish note: ${error.message}`);
+    if (noteId) {
+      // EDIT MODE
+      const res = await updateNote(noteId, noteData);
+      if (res.error) {
+        setMessage(`Error updating note: ${res.error}`);
+      } else {
+        setMessage("Note updated successfully!");
+        router.push(`/notes/${noteId}`);
+      }
     } else {
-      setMessage("Note published successfully!");
-      // Reset form and navigate to the dashboard/new note page
-      setTitle("");
-      setContent("");
-      setCourse("");
-      setTopic("");
-      router.push("/dashboard");
+      // CREATE MODE
+      const { error } = await supabase.from("notes").insert([{
+        ...noteData,
+        author_id: user.id
+      }]);
+
+      if (error) {
+        console.error("Database Error:", error);
+        setMessage(`Failed to publish note: ${error.message}`);
+      } else {
+        setMessage("Note published successfully!");
+        // Reset form and navigate to the dashboard
+        setTitle("");
+        setContent("");
+        setCourse("");
+        setTopic("");
+        router.push("/dashboard");
+      }
     }
 
     setLoading(false);
@@ -191,7 +218,7 @@ export default function NoteForm() {
       className="p-10 max-w-5xl mx-auto space-y-8 bg-white border border-gray-100 shadow-2xl rounded-2xl mt-12 transition duration-300 hover:shadow-3xl"
     >
       <h1 className="text-4xl font-extrabold text-center text-gray-900 tracking-tight border-b pb-4">
-        ✍️ Create New Academic Note
+        {noteId ? "✏️ Edit Academic Note" : "✍️ Create New Academic Note"}
       </h1>
 
       {message && (
@@ -464,7 +491,7 @@ export default function NoteForm() {
         disabled={loading}
         className="w-full bg-blue-600 text-white font-extrabold py-4 rounded-xl shadow-lg hover:bg-blue-700 transition duration-300 ease-in-out transform hover:scale-[1.005] disabled:bg-gray-400 disabled:shadow-none"
       >
-        {loading ? "Publishing Note..." : "🚀 Publish Note to Acadex"}
+        {loading ? "Processing..." : noteId ? "Save Changes" : "🚀 Publish Note to Acadex"}
       </button>
     </form>
   );
