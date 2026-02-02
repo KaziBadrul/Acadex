@@ -145,24 +145,59 @@ export async function fetchUserGroups() {
     const { data: { user } } = await supabaseAuth.auth.getUser();
     if (!user) return [];
 
-    const { data: memberships, error } = await supabaseServer
+    // 1. Get IDs of groups the user belongs to
+    const { data: myMemberships } = await supabaseServer
         .from("group_members")
-        .select(`
-      group_id,
-      groups (
-        id,
-        name,
-        invite_code
-      )
-    `)
+        .select("group_id")
         .eq("user_id", user.id);
 
-    if (error) {
-        console.error("Fetch Groups Error:", error);
+    if (!myMemberships || myMemberships.length === 0) return [];
+    const groupIds = myMemberships.map(m => m.group_id);
+
+    // 2. Fetch those groups (Bypassing RLS)
+    const { data: groups, error: groupsError } = await supabaseServer
+        .from("groups")
+        .select("id, name, invite_code, creator_id")
+        .in("id", groupIds);
+
+    if (groupsError || !groups) {
+        console.error("Fetch Groups Error:", groupsError);
         return [];
     }
 
-    return memberships.map((m: any) => m.groups);
+    // 3. Fetch all members with their profiles for these groups
+    const { data: allMembers, error: membersError } = await supabaseServer
+        .from("group_members")
+        .select("group_id, user_id, role")
+        .in("group_id", groupIds);
+
+    if (membersError || !allMembers) {
+        console.error("Fetch Members Error:", membersError);
+        return groups; // Return groups without members as fallback
+    }
+
+    // 4. Fetch profiles for all member user_ids
+    const userIds = Array.from(new Set(allMembers.map(m => m.user_id)));
+    const { data: profiles } = await supabaseServer
+        .from("profiles")
+        .select("id, username")
+        .in("id", userIds);
+
+    const profileMap = (profiles || []).reduce((acc: any, p) => {
+        acc[p.id] = p.username;
+        return acc;
+    }, {});
+
+    // 5. Stitch it together
+    return groups.map(g => ({
+        ...g,
+        group_members: allMembers
+            .filter(m => m.group_id === g.id)
+            .map(m => ({
+                ...m,
+                profiles: { username: profileMap[m.user_id] || "Unknown" }
+            }))
+    }));
 }
 
 export async function getGroupById(groupId: string) {

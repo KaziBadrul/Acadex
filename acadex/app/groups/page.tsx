@@ -123,18 +123,45 @@ export default function GroupsPage() {
                     ) : groups.length === 0 ? (
                         <p className="text-gray-500 italic">You haven't joined any groups yet.</p>
                     ) : (
-                        <div className="grid sm:grid-cols-2 gap-4">
+                        <div className="grid md:grid-cols-2 gap-6">
                             {groups.map((g) => (
-                                <div key={g.id} className="bg-white p-5 rounded-lg border shadow-sm flex justify-between items-center">
+                                <div key={g.id} className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex flex-col justify-between">
                                     <div>
-                                        <h3 className="font-bold text-lg text-blue-600">{g.name}</h3>
-                                        <p className="text-sm text-gray-500">Code: <span className="font-mono font-bold">{g.invite_code}</span></p>
+                                        <div className="flex justify-between items-start mb-2">
+                                            <h3 className="font-bold text-xl text-blue-700">{g.name}</h3>
+                                            <span className="text-xs bg-gray-100 text-gray-500 px-2 py-1 rounded-full font-bold">
+                                                {g.group_members?.length || 0} Members
+                                            </span>
+                                        </div>
+                                        <p className="text-sm text-gray-500 mb-4">
+                                            Invite Code: <span className="font-mono font-bold text-gray-800 bg-gray-50 px-2 py-1 rounded">{g.invite_code}</span>
+                                        </p>
+
+                                        <div className="mb-6">
+                                            <h4 className="text-xs font-bold uppercase text-gray-400 tracking-wider mb-2">Members</h4>
+                                            <div className="flex flex-wrap gap-2">
+                                                {g.group_members?.map((m: any) => (
+                                                    <span
+                                                        key={m.user_id}
+                                                        className={`text-xs px-2 py-1 rounded-md border ${m.role === 'admin'
+                                                                ? 'border-yellow-300 bg-yellow-50 text-yellow-700'
+                                                                : 'border-blue-100 bg-blue-50 text-blue-700'
+                                                            }`}
+                                                        title={m.role === 'admin' ? 'Admin' : 'Member'}
+                                                    >
+                                                        {m.profiles?.username || "Unknown"}
+                                                        {m.role === 'admin' && " 👑"}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </div>
                                     </div>
+
                                     <button
                                         onClick={() => router.push(`/dashboard?group=${g.id}`)}
-                                        className="text-sm bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded transition"
+                                        className="w-full bg-gray-900 text-white text-sm font-bold py-3 rounded-lg hover:bg-black transition shadow-sm"
                                     >
-                                        View Notes
+                                        View Group Notes
                                     </button>
                                 </div>
                             ))}
