@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import Link from "next/link";
@@ -23,7 +23,7 @@ interface Note {
 
 type FilterType = "all" | "notes" | "pdfs";
 
-export default function DashboardPage() {
+function DashboardContent() {
   const [notes, setNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<{ id: string; username: string } | null>(
@@ -312,8 +312,8 @@ export default function DashboardPage() {
                   key={v}
                   onClick={() => setVisibilityFilter(v)}
                   className={`px-3 py-1 text-xs font-bold rounded-md transition ${visibilityFilter === v
-                      ? "bg-white text-blue-600 shadow-sm"
-                      : "text-gray-500 hover:text-gray-700"
+                    ? "bg-white text-blue-600 shadow-sm"
+                    : "text-gray-500 hover:text-gray-700"
                     }`}
                 >
                   {v.toUpperCase()}
@@ -521,5 +521,13 @@ export default function DashboardPage() {
         }
       </div >
     </div >
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={<div className="p-12 text-center text-lg">Loading Dashboard...</div>}>
+      <DashboardContent />
+    </Suspense>
   );
 }
