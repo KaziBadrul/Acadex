@@ -32,6 +32,8 @@ export default function DashboardPage() {
 
   const [filter, setFilter] = useState<FilterType>("all");
   const [search, setSearch] = useState("");
+  const [visibilityFilter, setVisibilityFilter] = useState("all");
+  const [userJoinedGroups, setUserJoinedGroups] = useState<{ id: string, name: string }[]>([]);
   const [groupDetail, setGroupDetail] = useState<{ name: string; invite_code: string } | null>(null);
 
   const router = useRouter();
@@ -68,6 +70,13 @@ export default function DashboardPage() {
 
       const groupIds = memberships?.map((m: any) => m.group_id) || [];
       setMyGroupIds(groupIds);
+
+      // Fetch join group names for the selector
+      const { data: groupNames } = await supabase
+        .from("groups")
+        .select("id, name")
+        .in("id", groupIds);
+      setUserJoinedGroups(groupNames || []);
 
       // 1.5 Fetch group detail if filtering
       if (groupFilter) {
@@ -161,6 +170,9 @@ export default function DashboardPage() {
 
     if (filter === "pdfs" && !isPdf) return false;
     if (filter === "notes" && isPdf) return false;
+
+    // Visibility filter (secondary)
+    if (visibilityFilter !== "all" && note.visibility !== visibilityFilter) return false;
 
     if (search.trim()) {
       const q = search.toLowerCase();
@@ -287,6 +299,59 @@ export default function DashboardPage() {
             <p className="text-sm text-gray-500 mt-2">
               Invite Code: <span className="font-mono font-bold bg-gray-100 px-1 rounded">{groupDetail.invite_code}</span>
             </p>
+          )}
+        </div>
+
+        {/* --- Secondary Filters (Visibility & Groups) --- */}
+        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6 flex flex-wrap items-center gap-6">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-semibold text-gray-600">Visibility:</span>
+            <div className="flex bg-gray-100 p-1 rounded-lg">
+              {["all", "public", "private", "group"].map((v) => (
+                <button
+                  key={v}
+                  onClick={() => setVisibilityFilter(v)}
+                  className={`px-3 py-1 text-xs font-bold rounded-md transition ${visibilityFilter === v
+                      ? "bg-white text-blue-600 shadow-sm"
+                      : "text-gray-500 hover:text-gray-700"
+                    }`}
+                >
+                  {v.toUpperCase()}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-semibold text-gray-600">Select Group:</span>
+            <select
+              value={groupFilter || ""}
+              onChange={(e) => {
+                const val = e.target.value;
+                if (val) router.push(`/dashboard?group=${val}`);
+                else router.push("/dashboard");
+              }}
+              className="border rounded-lg px-2 py-1 text-sm bg-white focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">-- All Notes --</option>
+              {userJoinedGroups.map((g) => (
+                <option key={g.id} value={g.id}>
+                  {g.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {(visibilityFilter !== 'all' || groupFilter) && (
+            <button
+              onClick={() => {
+                setVisibilityFilter('all');
+                router.push('/dashboard');
+              }}
+              className="text-xs text-red-500 hover:underline font-bold"
+            >
+              Clear Filters
+            </button>
           )}
         </div>
 
