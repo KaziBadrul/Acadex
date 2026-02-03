@@ -251,6 +251,12 @@ function DashboardContent() {
             <p className="text-sm font-medium text-gray-500">Quick Actions</p>
             <div className="mt-2 space-y-2">
               <Link
+                href="/zen"
+                className="block text-indigo-500 hover:scale-105 transition-transform font-bold"
+              >
+                🧘 Enter Zen Mode
+              </Link>
+              <Link
                 href="/schedule"
                 className="block text-green-500 hover:underline"
               >
