@@ -12,6 +12,8 @@
     "@fullcalendar/interaction": "^6.1.20",
     "@fullcalendar/react": "^6.1.20",
     "@fullcalendar/timegrid": "^6.1.20",
+    "@floating-ui/core": "^1.6.0",
+    "@floating-ui/dom": "^1.6.0",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.87.0",
     "@tiptap/extension-color": "^3.18.0",
