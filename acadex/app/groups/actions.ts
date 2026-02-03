@@ -203,7 +203,7 @@ export async function fetchUserGroups() {
 export async function getGroupById(groupId: string) {
     const { data, error } = await supabaseServer
         .from("groups")
-        .select("id, name, invite_code")
+        .select("id, name, invite_code, created_by")
         .eq("id", groupId)
         .single();
 
@@ -323,7 +323,7 @@ export async function getGroupPageData(groupId: string) {
     const userRole = members.find(m => m.user_id === user.id)?.role || null;
 
     // Check if user is a member
-    if (!userRole && group.creator_id !== user.id) {
+    if (!userRole && group.created_by !== user.id) {
         // Optional: restriction logic here
     }
 
