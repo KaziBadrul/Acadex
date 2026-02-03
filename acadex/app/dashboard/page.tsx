@@ -276,9 +276,15 @@ function DashboardContent() {
               </Link>
               <Link
                 href="/groups"
-                className="block text-green-500 font-bold hover:underline"
+                className="block text-green-500 font-bold hover:underline border-t pt-2 mt-2"
               >
                 👥 Manage Groups
+              </Link>
+              <Link
+                href="/nexus"
+                className="block text-blue-600 font-bold hover:underline border-t pt-2 mt-2"
+              >
+                🧠 Launch Neural Nexus
               </Link>
             </div>
           </div>
