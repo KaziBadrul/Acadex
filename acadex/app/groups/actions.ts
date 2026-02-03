@@ -203,16 +203,20 @@ export async function fetchUserGroups() {
 export async function getGroupById(groupId: string) {
     const { data, error } = await supabaseServer
         .from("groups")
-        .select("id, name, invite_code, created_by")
+        .select("*")
         .eq("id", groupId)
         .single();
 
     if (error) {
-        console.error("Fetch Group Error:", error);
+        console.error("Fetch Group Error Detail:", error);
         return null;
     }
 
-    return data;
+    // Normalize property names (database might have created_by)
+    return {
+        ...data,
+        creator_id: data.creator_id || data.created_by
+    };
 }
 
 export async function getGroupMessages(groupId: string) {
@@ -279,12 +283,12 @@ export async function getGroupMembers(groupId: string) {
             user_id,
             role,
             joined_at,
-            profiles(username)
+            profiles:user_id(username)
         `)
         .eq("group_id", groupId);
 
     if (error) {
-        console.error("Fetch Members Error:", error);
+        console.error("Fetch Members Error Detail:", error);
         return [];
     }
 
@@ -323,7 +327,8 @@ export async function getGroupPageData(groupId: string) {
     const userRole = members.find(m => m.user_id === user.id)?.role || null;
 
     // Check if user is a member
-    if (!userRole && group.created_by !== user.id) {
+    const creatorId = (group as any).creator_id;
+    if (!userRole && creatorId !== user.id) {
         // Optional: restriction logic here
     }
 

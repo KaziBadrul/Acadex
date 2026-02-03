@@ -107,8 +107,8 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
                 <div className="flex justify-between items-center mb-8 border-b pb-4">
                     <div>
                         <h1 className="text-4xl font-bold text-gray-900">{group.name}</h1>
-                        {group.description && (
-                            <p className="text-gray-600 mt-2">{group.description}</p>
+                        {(group as any).description && (
+                            <p className="text-gray-600 mt-2">{(group as any).description}</p>
                         )}
                     </div>
                     <Link
