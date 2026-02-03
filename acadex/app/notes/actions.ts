@@ -113,6 +113,7 @@ export async function getNote(noteId: number) {
             author_id,
             visibility,
             group_id,
+            version,
             profiles(username)
         `)
         .eq("id", noteId)
