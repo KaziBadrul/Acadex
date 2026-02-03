@@ -19,6 +19,7 @@ interface Note {
   type: string | null;
   visibility: string;
   group_id: string | null;
+  comment_count?: number;
 }
 
 type FilterType = "all" | "notes" | "pdfs";
@@ -139,6 +140,27 @@ function DashboardContent() {
             });
 
             setVoteData(vData);
+          }
+        }
+
+        // --- Fetch Comment Counts for filtered notes ---
+        if (noteIds.length > 0) {
+          const { data: commentCounts, error: commentError } = await supabase
+            .from("note_comments")
+            .select("note_id")
+            .in("note_id", noteIds);
+
+          if (!commentError && commentCounts) {
+            const cData: Record<number, number> = {};
+            noteIds.forEach(id => { cData[id] = 0; });
+            commentCounts.forEach(c => {
+              if (cData[c.note_id] !== undefined) cData[c.note_id]++;
+            });
+
+            setNotes(prev => prev.map(n => ({
+              ...n,
+              comment_count: cData[n.id] || 0
+            })));
           }
         }
       }
@@ -468,8 +490,11 @@ function DashboardContent() {
                         {note.visibility.toUpperCase()}
                       </span>
 
-                      <span>|</span>
-                      <span className="font-semibold">Created:</span>
+                      <span className="ml-2">
+                        {note.comment_count !== undefined ? `💬 ${note.comment_count}` : "💬 0"}
+                      </span>
+                      <span className="ml-1">|</span>
+                      <span className="font-semibold ml-1">Created:</span>
                       {new Date(note.created_at).toLocaleDateString()}
                     </div>
                   </Link>

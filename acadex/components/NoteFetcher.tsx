@@ -8,6 +8,7 @@ import { createClient } from "@/utils/supabase/client";
 import MarkdownRenderer from "./MarkdownRenderer";
 import VoteButtons from "./VoteButtons";
 import { getNote } from "@/app/notes/actions";
+import CommentSection from "./CommentSection";
 
 interface NoteFetcherProps {
   noteId: number;
@@ -216,6 +217,11 @@ export default function NoteFetcher({ noteId }: NoteFetcherProps) {
             )}
             <MarkdownRenderer markdown={note.content ?? ""} />
           </div>
+        )}
+
+        {/* Comment Section (Excluded for Private Notes) */}
+        {note.visibility !== "private" && (
+          <CommentSection noteId={note.id} currentUser={sessionUser} />
         )}
       </div>
     </div>
