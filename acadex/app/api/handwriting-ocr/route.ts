@@ -8,19 +8,20 @@ cloudinary.config({
   secure: true,
 });
 
-
+// Upload image buffer + run OCR (Cloudinary add-on)
 function uploadBufferToCloudinary(buffer: Buffer) {
   return new Promise<any>((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
       {
         folder: "handwriting_ocr",
         resource_type: "image",
+        // Cloudinary OCR add-on:
         ocr: "adv_ocr:document",
       },
       (error, result) => {
         if (error) reject(error);
         else resolve(result);
-      }
+      },
     );
 
     stream.end(buffer);
@@ -39,7 +40,7 @@ export async function POST(request: Request) {
         cookies: {
           get: (name) => cookieStore.get(name)?.value,
         },
-      }
+      },
     );
 
     const {
@@ -50,14 +51,33 @@ export async function POST(request: Request) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // FormData expected: file + optional title/course/topic
     const formData = await request.formData();
     const file = formData.get("file");
-    const title = (formData.get("title") as string) || "Scanned note";
-    const course = (formData.get("course") as string) || null;
-    const topic = (formData.get("topic") as string) || null;
+    const title = (formData.get("title") as string) || "";
+    const course = (formData.get("course") as string) || "";
+    const topic = (formData.get("topic") as string) || "";
 
     if (!file || !(file instanceof File)) {
       return Response.json({ error: "No file uploaded" }, { status: 400 });
+    }
+
+    // Basic validation: only images
+    const allowedTypes = ["image/png", "image/jpeg", "image/jpg", "image/webp"];
+    if (!allowedTypes.includes(file.type)) {
+      return Response.json(
+        { error: "Only images are allowed for handwriting OCR" },
+        { status: 400 },
+      );
+    }
+
+    // ✅ Limit file size (5MB)
+    const MAX_SIZE = 5 * 1024 * 1024;
+    if (file.size > MAX_SIZE) {
+      return Response.json(
+        { error: "File size must be under 5MB" },
+        { status: 400 },
+      );
     }
 
     // Convert to buffer
@@ -67,47 +87,28 @@ export async function POST(request: Request) {
     // Upload + OCR
     const result = await uploadBufferToCloudinary(buffer);
 
+    // Extract text
     const ocrRoot = result?.info?.ocr?.["adv_ocr:document"];
     const ocrData = ocrRoot?.data?.[0];
 
-    const text =
+    const text: string =
       ocrData?.fullTextAnnotation?.text ||
       ocrData?.textAnnotations?.[0]?.description ||
       "";
 
-    // Save as a scanned note
-
-    const { data: note, error: insertError } = await supabase
-      .from("notes")
-      .insert({
-        title,
-        content: text,
-        version: 1,
-        author_id: user.id,
-        course,
-        topic,
-        visibility: "public",
-        type: "scanned",
-        file_url: result.secure_url,
-      })
-      .select("id")
-      .single();
-
-    if (insertError) {
-      return Response.json({ error: insertError.message }, { status: 500 });
-    }
-
     return Response.json({
       success: true,
-      id: note.id,
       text,
-      ocr: result?.info?.ocr,
+      file_url: result?.secure_url ?? null,
+      meta: { title, course, topic },
+      // keep ocr if you want to debug; remove in production if too large
+      ocr: result?.info?.ocr ?? null,
     });
   } catch (err: any) {
-    console.error("OCR ERROR:", err);
+    console.error("HANDWRITING OCR ERROR:", err);
     return Response.json(
       { error: err?.message ?? "OCR failed" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

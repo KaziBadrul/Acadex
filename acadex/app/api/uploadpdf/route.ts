@@ -14,6 +14,8 @@ export async function POST(req: Request) {
     const course = formData.get("course") as string | null;
     const topic = formData.get("topic") as string | null;
     const author_id = formData.get("author_id") as string | null;
+    const visibility = (formData.get("visibility") as string | null) || "public";
+    const group_id = formData.get("group_id") as string | null;
 
     if (!file || !title || !author_id) {
       return NextResponse.json(
@@ -43,7 +45,8 @@ export async function POST(req: Request) {
       author_id,
       course,
       topic,
-      visibility: "public",
+      visibility,
+      group_id: visibility === "group" ? (group_id || null) : null,
       type: "pdf",
       file_url: publicUrl.publicUrl,
     });

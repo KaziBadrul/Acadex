@@ -3,8 +3,11 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/utils/supabase/client";
 import MarkdownRenderer from "./MarkdownRenderer";
+import VoteButtons from "./VoteButtons";
+import { getNote } from "@/app/notes/actions";
 
 interface NoteFetcherProps {
   noteId: number;
@@ -19,11 +22,15 @@ interface NoteData {
   created_at: string;
   type: string | null; // <-- NEW
   file_url: string | null; // <-- NEW
+  author_id: string; // To check ownership
+  visibility: string;
+  group_id: string | null;
   profiles: { username: string } | { username: string }[] | null;
 }
 
 export default function NoteFetcher({ noteId }: NoteFetcherProps) {
   const [note, setNote] = useState<NoteData | null>(null);
+  const [sessionUser, setSessionUser] = useState<{ id: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -31,7 +38,7 @@ export default function NoteFetcher({ noteId }: NoteFetcherProps) {
   const router = useRouter();
 
   useEffect(() => {
-    async function fetchNote() {
+    async function fetchNoteData() {
       // 1. Auth check
       const {
         data: { session },
@@ -40,29 +47,37 @@ export default function NoteFetcher({ noteId }: NoteFetcherProps) {
         router.push("/login");
         return;
       }
+      setSessionUser(session.user);
 
-      // 2. Fetch note (include type + file_url)
-      const { data: noteData, error: fetchError } = await supabase
-        .from("notes")
-        .select(
-          `
-          id,
-          title,
-          content,
-          course,
-          topic,
-          created_at,
-          type,
-          file_url,
-          profiles(username)
-        `
-        )
-        .eq("id", noteId)
-        .single();
+      // 2. Fetch note using server action (RLS bypass)
+      const res = await getNote(noteId);
 
-      if (fetchError) {
-        console.error("Fetch Error:", fetchError);
-        setError("Note not found or you do not have permission to view it.");
+      if (res.error || !res.note) {
+        console.error("Fetch Error:", res.error);
+        setError("Note not found.");
+        setLoading(false);
+        return;
+      }
+
+      const noteData = res.note as any;
+
+      // 3. Access control check
+      if (noteData.visibility === "private" && noteData.author_id !== session.user.id) {
+        setError("This note is private.");
+      } else if (noteData.visibility === "group") {
+        // Check membership
+        const { data: membership } = await supabase
+          .from("group_members")
+          .select("*")
+          .eq("group_id", noteData.group_id)
+          .eq("user_id", session.user.id)
+          .single();
+
+        if (!membership && noteData.author_id !== session.user.id) {
+          setError("You do not have access to this group note.");
+        } else {
+          setNote(noteData as NoteData);
+        }
       } else {
         setNote(noteData as NoteData);
       }
@@ -70,7 +85,7 @@ export default function NoteFetcher({ noteId }: NoteFetcherProps) {
       setLoading(false);
     }
 
-    fetchNote();
+    fetchNoteData();
   }, [noteId, supabase, router]);
 
   if (loading) {
@@ -117,11 +132,42 @@ export default function NoteFetcher({ noteId }: NoteFetcherProps) {
           <p className="text-sm mt-1">
             Published: {new Date(note.created_at).toLocaleDateString()}
           </p>
+          <div className="mt-4">
+            <VoteButtons noteId={note.id} />
+          </div>
         </div>
 
         {/* ===== CONTENT ===== */}
+        {/* ===== CONTENT ===== */}
         {isPdf ? (
-          <div className="bg-white rounded-xl shadow p-4">
+          <div className="bg-white rounded-xl shadow p-4 relative">
+            {/* Delete button for PDF */}
+            {sessionUser?.id === note.author_id && (
+              <div className="absolute top-4 right-4 z-10 flex gap-2">
+                <Link
+                  href={`/notes/${noteId}/edit`}
+                  className="p-2 text-white bg-blue-600 hover:bg-blue-700 rounded-md shadow transition text-sm font-medium"
+                >
+                  Edit Metadata
+                </Link>
+                <button
+                  onClick={async () => {
+                    if (!confirm("Are you sure you want to delete this note?")) return;
+                    const { error } = await supabase.from("notes").delete().eq("id", noteId);
+                    if (error) {
+                      alert("Error deleting note");
+                      console.error(error);
+                    } else {
+                      router.push("/dashboard");
+                    }
+                  }}
+                  className="p-2 text-white bg-red-600 hover:bg-red-700 rounded-md shadow transition text-sm font-medium"
+                >
+                  Delete Note
+                </button>
+              </div>
+            )}
+
             <div className="flex justify-between items-center mb-3">
               <p className="text-sm text-gray-500">PDF Document</p>
               <a
@@ -141,7 +187,35 @@ export default function NoteFetcher({ noteId }: NoteFetcherProps) {
             />
           </div>
         ) : (
-          <MarkdownRenderer markdown={note.content ?? ""} />
+          <div className="relative">
+            {/* Delete button for Markdown Note */}
+            {sessionUser?.id === note.author_id && (
+              <div className="absolute -top-12 right-0 flex gap-2">
+                <Link
+                  href={`/notes/${noteId}/edit`}
+                  className="p-2 text-white bg-blue-600 hover:bg-blue-700 rounded-md shadow transition text-sm font-medium"
+                >
+                  Edit Note
+                </Link>
+                <button
+                  onClick={async () => {
+                    if (!confirm("Are you sure you want to delete this note?")) return;
+                    const { error } = await supabase.from("notes").delete().eq("id", noteId);
+                    if (error) {
+                      alert("Error deleting note");
+                      console.error(error);
+                    } else {
+                      router.push("/dashboard");
+                    }
+                  }}
+                  className="p-2 text-white bg-red-600 hover:bg-red-700 rounded-md shadow transition text-sm font-medium"
+                >
+                  Delete Note
+                </button>
+              </div>
+            )}
+            <MarkdownRenderer markdown={note.content ?? ""} />
+          </div>
         )}
       </div>
     </div>

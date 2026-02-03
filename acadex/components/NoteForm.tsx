@@ -4,28 +4,62 @@
 import { useRef, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
+import { updateNote } from "@/app/notes/actions";
+import Tiptap from "./Tiptap";
+import HandwritingPad from "./HandwritingPad";
+
 // import ReactMarkdown from 'react-markdown' // Uncomment if you want an in-page preview
 
-export default function NoteForm() {
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const [course, setCourse] = useState("");
-  const [topic, setTopic] = useState("");
+interface NoteFormProps {
+  noteId?: number;
+  initialData?: {
+    title: string;
+    content: string;
+    course: string;
+    topic: string;
+    visibility: string;
+    group_id: string | null;
+  };
+}
+
+export default function NoteForm({ noteId, initialData }: NoteFormProps) {
+  const supabase = createClient();
+  const [title, setTitle] = useState(initialData?.title || "");
+  const [content, setContent] = useState(initialData?.content || "");
+  const [course, setCourse] = useState(initialData?.course || "");
+  const [topic, setTopic] = useState(initialData?.topic || "");
+  const [visibility, setVisibility] = useState(initialData?.visibility || "public");
+  const [groupId, setGroupId] = useState(initialData?.group_id || "");
+  const [userGroups, setUserGroups] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [showPad, setShowPad] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-  const transcript = localStorage.getItem("voice_transcript");
+    const transcript = localStorage.getItem("voice_transcript");
 
-  if (transcript) {
-    setContent((prev) =>
-      prev ? prev + "\n\n" + transcript : transcript
-    );
-    localStorage.removeItem("voice_transcript"); 
-  }
-}, []);
+    if (transcript) {
+      setContent((prev) => (prev ? prev + "\n\n" + transcript : transcript));
+      localStorage.removeItem("voice_transcript");
+    }
 
+    // Fetch user groups for visibility selection
+    async function loadGroups() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: memberships } = await supabase
+          .from("group_members")
+          .select("groups(id, name)")
+          .eq("user_id", user.id);
+
+        if (memberships) {
+          setUserGroups(memberships.map((m: any) => m.groups));
+        }
+      }
+    }
+    loadGroups();
+  }, [supabase]);
 
   const router = useRouter();
 
@@ -102,7 +136,7 @@ export default function NoteForm() {
         setMessage("OCR request failed: " + msg);
       } else if (ocrJson?.success && typeof ocrJson.text === "string") {
         setContent((prev) =>
-          prev ? prev + "\n\n" + ocrJson.text : ocrJson.text
+          prev ? prev + "\n\n" + ocrJson.text : ocrJson.text,
         );
         setMessage("OCR completed and content inserted into editor.");
       } else {
@@ -119,8 +153,6 @@ export default function NoteForm() {
     }
   };
 
-  // const router = useRouter();
-  const supabase = createClient();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -138,30 +170,43 @@ export default function NoteForm() {
       return;
     }
 
-    // 2. Prepare the data for insertion
-    const newNote = {
-      author_id: user.id, // Linked to your public.profiles via the trigger we created!
+    const noteData = {
       title: title.trim(),
       content: content,
       course: course.trim(),
       topic: topic.trim(),
-      // 'visibility' defaults to 'public' in the DB schema, so we omit it here
+      visibility: visibility,
+      group_id: visibility === "group" ? (groupId || null) : null,
     };
 
-    // 3. Insert into the 'notes' table
-    const { error } = await supabase.from("notes").insert([newNote]);
-
-    if (error) {
-      console.error("Database Error:", error);
-      setMessage(`Failed to publish note: ${error.message}`);
+    if (noteId) {
+      // EDIT MODE
+      const res = await updateNote(noteId, noteData);
+      if (res.error) {
+        setMessage(`Error updating note: ${res.error}`);
+      } else {
+        setMessage("Note updated successfully!");
+        router.push(`/notes/${noteId}`);
+      }
     } else {
-      setMessage("Note published successfully!");
-      // Reset form and navigate to the dashboard/new note page
-      setTitle("");
-      setContent("");
-      setCourse("");
-      setTopic("");
-      router.push("/dashboard");
+      // CREATE MODE
+      const { error } = await supabase.from("notes").insert([{
+        ...noteData,
+        author_id: user.id
+      }]);
+
+      if (error) {
+        console.error("Database Error:", error);
+        setMessage(`Failed to publish note: ${error.message}`);
+      } else {
+        setMessage("Note published successfully!");
+        // Reset form and navigate to the dashboard
+        setTitle("");
+        setContent("");
+        setCourse("");
+        setTopic("");
+        router.push("/dashboard");
+      }
     }
 
     setLoading(false);
@@ -170,20 +215,18 @@ export default function NoteForm() {
   return (
     <form
       onSubmit={handleSubmit}
-      // Modern styling: Larger padding, subtle background, rounded corners, significant shadow
       className="p-10 max-w-5xl mx-auto space-y-8 bg-white border border-gray-100 shadow-2xl rounded-2xl mt-12 transition duration-300 hover:shadow-3xl"
     >
       <h1 className="text-4xl font-extrabold text-center text-gray-900 tracking-tight border-b pb-4">
-        ✍️ Create New Academic Note
+        {noteId ? "✏️ Edit Academic Note" : "✍️ Create New Academic Note"}
       </h1>
 
       {message && (
         <div
-          className={`p-4 rounded-lg text-center font-medium border ${
-            message.includes("Error")
-              ? "bg-red-50 text-red-700 border-red-300"
-              : "bg-green-50 text-green-700 border-green-300"
-          }`}
+          className={`p-4 rounded-lg text-center font-medium border ${message.includes("Error")
+            ? "bg-red-50 text-red-700 border-red-300"
+            : "bg-green-50 text-green-700 border-green-300"
+            }`}
         >
           {message}
         </div>
@@ -200,7 +243,6 @@ export default function NoteForm() {
           onChange={(e) => setTitle(e.target.value)}
           required
           placeholder="e.g., Dijkstra's Algorithm: A Simple Explanation"
-          // Modern input styling: Deeper padding, better focus ring, smooth corners
           className="w-full p-4 border border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition duration-150 shadow-sm"
         />
       </div>
@@ -235,12 +277,51 @@ export default function NoteForm() {
         </div>
       </div>
 
+      {/* Visibility */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-black">
+        <div>
+          <label className="block text-gray-700 font-semibold mb-2">
+            Visibility
+          </label>
+          <select
+            value={visibility}
+            onChange={(e) => setVisibility(e.target.value)}
+            className="w-full p-4 border border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition duration-150 shadow-sm bg-white"
+          >
+            <option value="public">Public (Everyone can see)</option>
+            <option value="private">Private (Only you can see)</option>
+            <option value="group">Group (Only members can see)</option>
+          </select>
+        </div>
+        {visibility === "group" && (
+          <div>
+            <label className="block text-gray-700 font-semibold mb-2">
+              Select Group
+            </label>
+            <select
+              value={groupId}
+              onChange={(e) => setGroupId(e.target.value)}
+              required={visibility === "group"}
+              className="w-full p-4 border border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition duration-150 shadow-sm bg-white"
+            >
+              <option value="">-- Choose a Group --</option>
+              {userGroups.map((g) => (
+                <option key={g.id} value={g.id}>
+                  {g.name}
+                </option>
+              ))}
+            </select>
+            {userGroups.length === 0 && (
+              <p className="text-xs text-red-500 mt-1">You are not in any groups. Join one first!</p>
+            )}
+          </div>
+        )}
+      </div>
+
       {/* Content (Markdown Editor Area) */}
       <div className="">
-        <div className="w-fit h-fit flex items-center justify-center mb-4">
-          <label className="block text-gray-700 font-semibold mb-2">
-            Content (Supports Markdown)
-          </label>
+        <div className="w-fit h-fit flex items-center justify-center">
+          <label className="block text-gray-700 font-semibold">Content</label>
           {/* Hidden file input */}
           <input
             type="file"
@@ -259,6 +340,16 @@ export default function NoteForm() {
 
           <button
             type="button"
+            onClick={() => setShowPad((s) => !s)}
+            className="bg-purple-600 ml-10 px-4 py-2 rounded-2xl transition-all duration-300 hover:bg-purple-700 cursor-pointer flex items-center justify-center"
+          >
+            <p className="font-bold">
+              {showPad ? "🧾 Hide Ink Pad" : "🖊️ Handwriting Pad"}
+            </p>
+          </button>
+
+          <button
+            type="button"
             onClick={handleHandwritingButtonClick}
             className="bg-blue-600 ml-10 px-4 py-2 rounded-2xl transition-all duration-300 hover:bg-blue-700 cursor-pointer flex items-center justify-center"
           >
@@ -273,25 +364,134 @@ export default function NoteForm() {
             <p className="font-bold">🎙️ Voice to Text</p>
           </button>
         </div>
-        <textarea
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          required
-          rows={15}
-          placeholder="Start writing your note here using Markdown syntax for clear formatting (e.g., # Headings, **bold**, *italics*, lists)..."
-          // Styled for a cleaner writing experience
-          className="w-full p-5 border border-gray-300 rounded-xl font-mono text-gray-800 resize-y focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition duration-150 shadow-inner bg-gray-50"
-        />
+      </div>
+      <div className=" text-white p-12">
+        <div className="max-w-3xl mx-auto space-y-8">
+          <header className="space-y-2">
+            <h1 className="text-4xl font-light tracking-tighter"></h1>
+            <p className="text-zinc-500 text-sm"></p>
+          </header>
+
+          {showPad && (
+            <HandwritingPad
+              disabled={loading}
+              onSaveInk={async (blob) => {
+                setLoading(true);
+                setMessage("Uploading handwriting...");
+
+                try {
+                  const file = new File(
+                    [blob],
+                    `handwriting-${Date.now()}.png`,
+                    {
+                      type: "image/png",
+                    },
+                  );
+
+                  const fd = new FormData();
+                  fd.append("file", file);
+
+                  const res = await fetch("/api/handwriting-upload", {
+                    method: "POST",
+                    body: fd,
+                  });
+
+                  const json = await res.json().catch(() => null);
+
+                  if (!res.ok) {
+                    setMessage(
+                      "Upload failed: " + (json?.error ?? "Unknown error"),
+                    );
+                    return;
+                  }
+
+                  const url = json?.url as string | undefined;
+                  if (!url) {
+                    setMessage("Upload failed: no url returned");
+                    return;
+                  }
+
+                  // Insert image into TipTap HTML
+                  const imgHtml = `<p></p><img src="${url}" alt="handwriting" />`;
+                  setContent((prev) =>
+                    prev
+                      ? prev + imgHtml
+                      : `<img src="${url}" alt="handwriting" />`,
+                  );
+
+                  setMessage("Handwriting inserted into the note!");
+                } catch (e: any) {
+                  setMessage("Upload error: " + String(e?.message ?? e));
+                } finally {
+                  setLoading(false);
+                }
+              }}
+              onOcr={async (blob) => {
+                // Call your Cloudinary OCR route (FormData based)
+                setLoading(true);
+                setMessage("Running handwriting OCR...");
+
+                try {
+                  const file = new File(
+                    [blob],
+                    `handwriting-${Date.now()}.png`,
+                    {
+                      type: "image/png",
+                    },
+                  );
+
+                  const fd = new FormData();
+                  fd.append("file", file);
+                  fd.append("title", title || ""); // optional
+                  fd.append("course", course || ""); // optional
+                  fd.append("topic", topic || ""); // optional
+
+                  const res = await fetch("/api/handwriting-ocr", {
+                    method: "POST",
+                    body: fd,
+                  });
+
+                  const json = await res.json();
+                  if (!res.ok) throw new Error(json?.error ?? "OCR failed");
+
+                  const text = (json?.text as string) || "";
+
+                  // TipTap is HTML-based -> escape then insert
+                  const escaped = text
+                    .replaceAll("&", "&amp;")
+                    .replaceAll("<", "&lt;")
+                    .replaceAll(">", "&gt;");
+
+                  setContent((prev) =>
+                    prev
+                      ? prev + `<p></p><pre>${escaped}</pre>`
+                      : `<pre>${escaped}</pre>`,
+                  );
+
+                  setMessage("OCR text inserted into the editor.");
+                } catch (e: any) {
+                  setMessage("OCR error: " + String(e?.message ?? e));
+                } finally {
+                  setLoading(false);
+                }
+              }}
+            />
+          )}
+
+          <Tiptap
+            content={content}
+            onChange={(newHtml) => setContent(newHtml)}
+          />
+        </div>
       </div>
 
       {/* Submit Button */}
       <button
         type="submit"
         disabled={loading}
-        // Premium Button Styling: Brighter color, stronger shadow, subtle hover effect
         className="w-full bg-blue-600 text-white font-extrabold py-4 rounded-xl shadow-lg hover:bg-blue-700 transition duration-300 ease-in-out transform hover:scale-[1.005] disabled:bg-gray-400 disabled:shadow-none"
       >
-        {loading ? "Publishing Note..." : "🚀 Publish Note to Acadex"}
+        {loading ? "Processing..." : noteId ? "Save Changes" : "🚀 Publish Note to Acadex"}
       </button>
     </form>
   );
