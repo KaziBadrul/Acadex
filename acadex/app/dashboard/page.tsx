@@ -235,7 +235,7 @@ function DashboardContent() {
       {/* --- Quick Stats and Actions --- */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
 
-        {/* Notes Stat Widget */}
+        {/* Notes Stats Widget */}
         <div className="bg-card p-6 rounded-2xl shadow-subtle border border-muted/20 flex flex-col justify-between group">
           <div>
             <div className="flex items-center gap-2 mb-2 text-primary/60">
