@@ -16,7 +16,7 @@ export async function middleware(req: NextRequest) {
         get(name: string) {
           return req.cookies.get(name)?.value;
         },
-        // Set a new cookie on the response
+
         set(name: string, value: string, options) {
           res.cookies.set(name, value, options);
         },
@@ -35,7 +35,7 @@ export async function middleware(req: NextRequest) {
 
   // Define paths that require the user to be authenticated
   const protectedPaths = ["/dashboard", "/notes/create", "/schedule"];
-  
+
   // Check if the current request pathname starts with any protected path
   const isProtected = protectedPaths.some((p) =>
     req.nextUrl.pathname.startsWith(p)
