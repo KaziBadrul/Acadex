@@ -19,6 +19,7 @@ interface Note {
   type: string | null;
   visibility: string;
   group_id: string | null;
+  comment_count?: number;
 }
 
 type FilterType = "all" | "notes" | "pdfs";
@@ -33,8 +34,13 @@ function DashboardContent() {
   const [filter, setFilter] = useState<FilterType>("all");
   const [search, setSearch] = useState("");
   const [visibilityFilter, setVisibilityFilter] = useState("all");
-  const [userJoinedGroups, setUserJoinedGroups] = useState<{ id: string, name: string }[]>([]);
-  const [groupDetail, setGroupDetail] = useState<{ name: string; invite_code: string } | null>(null);
+  const [userJoinedGroups, setUserJoinedGroups] = useState<
+    { id: string; name: string }[]
+  >([]);
+  const [groupDetail, setGroupDetail] = useState<{
+    name: string;
+    invite_code: string;
+  } | null>(null);
 
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -44,7 +50,9 @@ function DashboardContent() {
   const [myGroupIds, setMyGroupIds] = useState<string[]>([]);
 
   /* Vote State */
-  const [voteData, setVoteData] = useState<Record<number, { up: number; down: number; userVote: 1 | -1 | null }>>({});
+  const [voteData, setVoteData] = useState<
+    Record<number, { up: number; down: number; userVote: 1 | -1 | null }>
+  >({});
 
   useEffect(() => {
     async function fetchData() {
@@ -98,9 +106,11 @@ function DashboardContent() {
           // Basic visibility rules
           let hasAccess = false;
           if (note.visibility === "public") hasAccess = true;
-          else if (note.visibility === "private") hasAccess = note.author_id === user.id;
+          else if (note.visibility === "private")
+            hasAccess = note.author_id === user.id;
           else if (note.visibility === "group") {
-            hasAccess = groupIds.includes(note.group_id) || note.author_id === user.id;
+            hasAccess =
+              groupIds.includes(note.group_id) || note.author_id === user.id;
           }
 
           if (!hasAccess) return false;
@@ -121,13 +131,16 @@ function DashboardContent() {
             .in("note_id", noteIds);
 
           if (votes) {
-            const vData: Record<number, { up: number; down: number; userVote: 1 | -1 | null }> = {};
+            const vData: Record<
+              number,
+              { up: number; down: number; userVote: 1 | -1 | null }
+            > = {};
 
-            noteIds.forEach(id => {
+            noteIds.forEach((id) => {
               vData[id] = { up: 0, down: 0, userVote: null };
             });
 
-            votes.forEach(v => {
+            votes.forEach((v) => {
               if (!vData[v.note_id]) return;
 
               if (v.vote_type === 1) vData[v.note_id].up++;
@@ -139,6 +152,31 @@ function DashboardContent() {
             });
 
             setVoteData(vData);
+          }
+        }
+
+        // --- Fetch Comment Counts for filtered notes ---
+        if (noteIds.length > 0) {
+          const { data: commentCounts, error: commentError } = await supabase
+            .from("note_comments")
+            .select("note_id")
+            .in("note_id", noteIds);
+
+          if (!commentError && commentCounts) {
+            const cData: Record<number, number> = {};
+            noteIds.forEach((id) => {
+              cData[id] = 0;
+            });
+            commentCounts.forEach((c) => {
+              if (cData[c.note_id] !== undefined) cData[c.note_id]++;
+            });
+
+            setNotes((prev) =>
+              prev.map((n) => ({
+                ...n,
+                comment_count: cData[n.id] || 0,
+              })),
+            );
           }
         }
       }
@@ -172,7 +210,8 @@ function DashboardContent() {
     if (filter === "notes" && isPdf) return false;
 
     // Visibility filter (secondary)
-    if (visibilityFilter !== "all" && note.visibility !== visibilityFilter) return false;
+    if (visibilityFilter !== "all" && note.visibility !== visibilityFilter)
+      return false;
 
     if (search.trim()) {
       const q = search.toLowerCase();
@@ -263,6 +302,12 @@ function DashboardContent() {
                 📚 Resource Repository
               </Link>
               <Link
+                href="/requests"
+                className="block text-green-500 hover:underline"
+              >
+                📝 Request Note (Community)
+              </Link>
+              <Link
                 href="/reminder/set"
                 className="block text-green-500 hover:underline"
               >
@@ -286,18 +331,25 @@ function DashboardContent() {
           <div className="bg-white p-6 rounded-xl shadow-lg border-l-4 border-yellow-500">
             <p className="text-sm font-medium text-gray-500">User Profile</p>
             <p className="font-bold text-lg text-gray-900">{user.username}</p>
-            <p className="font-mono text-sm truncate text-gray-400">ID: {user.id}</p>
+            <p className="font-mono text-sm truncate text-gray-400">
+              ID: {user.id}
+            </p>
           </div>
         </div>
 
         {/* --- Notes List --- */}
         <div className="mb-6">
           <h2 className="text-2xl font-semibold text-gray-800 border-b pb-2">
-            {groupDetail ? `📚 ${groupDetail.name} Notes` : "All Available Notes"}
+            {groupDetail
+              ? `📚 ${groupDetail.name} Notes`
+              : "All Available Notes"}
           </h2>
           {groupDetail && (
             <p className="text-sm text-gray-500 mt-2">
-              Invite Code: <span className="font-mono font-bold bg-gray-100 px-1 rounded">{groupDetail.invite_code}</span>
+              Invite Code:{" "}
+              <span className="font-mono font-bold bg-gray-100 px-1 rounded">
+                {groupDetail.invite_code}
+              </span>
             </p>
           )}
         </div>
@@ -305,16 +357,19 @@ function DashboardContent() {
         {/* --- Secondary Filters (Visibility & Groups) --- */}
         <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6 flex flex-wrap items-center gap-6">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-gray-600">Visibility:</span>
+            <span className="text-sm font-semibold text-gray-600">
+              Visibility:
+            </span>
             <div className="flex bg-gray-100 p-1 rounded-lg">
               {["all", "public", "private", "group"].map((v) => (
                 <button
                   key={v}
                   onClick={() => setVisibilityFilter(v)}
-                  className={`px-3 py-1 text-xs font-bold rounded-md transition ${visibilityFilter === v
-                    ? "bg-white text-blue-600 shadow-sm"
-                    : "text-gray-500 hover:text-gray-700"
-                    }`}
+                  className={`px-3 py-1 text-xs font-bold rounded-md transition ${
+                    visibilityFilter === v
+                      ? "bg-white text-blue-600 shadow-sm"
+                      : "text-gray-500 hover:text-gray-700"
+                  }`}
                 >
                   {v.toUpperCase()}
                 </button>
@@ -323,7 +378,9 @@ function DashboardContent() {
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-gray-600">Select Group:</span>
+            <span className="text-sm font-semibold text-gray-600">
+              Select Group:
+            </span>
             <select
               value={groupFilter || ""}
               onChange={(e) => {
@@ -342,11 +399,11 @@ function DashboardContent() {
             </select>
           </div>
 
-          {(visibilityFilter !== 'all' || groupFilter) && (
+          {(visibilityFilter !== "all" || groupFilter) && (
             <button
               onClick={() => {
-                setVisibilityFilter('all');
-                router.push('/dashboard');
+                setVisibilityFilter("all");
+                router.push("/dashboard");
               }}
               className="text-xs text-red-500 hover:underline font-bold"
             >
@@ -361,9 +418,10 @@ function DashboardContent() {
             <button
               onClick={() => setFilter("all")}
               className={`px-3 py-1 text-sm font-semibold rounded border
-                ${filter === "all"
-                  ? "bg-blue-600 text-white border-blue-600"
-                  : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
+                ${
+                  filter === "all"
+                    ? "bg-blue-600 text-white border-blue-600"
+                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
                 }
               `}
             >
@@ -373,9 +431,10 @@ function DashboardContent() {
             <button
               onClick={() => setFilter("notes")}
               className={`px-3 py-1 text-sm font-semibold rounded border
-                ${filter === "notes"
-                  ? "bg-blue-600 text-white border-blue-600"
-                  : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
+                ${
+                  filter === "notes"
+                    ? "bg-blue-600 text-white border-blue-600"
+                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
                 }
               `}
             >
@@ -385,9 +444,10 @@ function DashboardContent() {
             <button
               onClick={() => setFilter("pdfs")}
               className={`px-3 py-1 text-sm font-semibold rounded border
-                ${filter === "pdfs"
-                  ? "bg-blue-600 text-white border-blue-600"
-                  : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
+                ${
+                  filter === "pdfs"
+                    ? "bg-blue-600 text-white border-blue-600"
+                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
                 }
               `}
             >
@@ -412,11 +472,11 @@ function DashboardContent() {
               const isOwner = user.id === note.author_id;
 
               return (
-                <div key={note.id} className="relative group bg-white rounded-lg shadow hover:shadow-md transition">
-                  <Link
-                    href={`/notes/${note.id}`}
-                    className="block p-5 pb-2"
-                  >
+                <div
+                  key={note.id}
+                  className="relative group bg-white rounded-lg shadow hover:shadow-md transition"
+                >
+                  <Link href={`/notes/${note.id}`} className="block p-5 pb-2">
                     <div className="flex items-center gap-2">
                       {isOwner && (
                         <svg
@@ -461,15 +521,25 @@ function DashboardContent() {
                         </span>
                       )}
 
-                      <span className={`ml-2 px-2 py-0.5 text-xs font-semibold rounded border ${note.visibility === 'private' ? 'border-orange-500 text-orange-600' :
-                        note.visibility === 'group' ? 'border-purple-500 text-purple-600' :
-                          'border-blue-300 text-blue-500'
-                        }`}>
+                      <span
+                        className={`ml-2 px-2 py-0.5 text-xs font-semibold rounded border ${
+                          note.visibility === "private"
+                            ? "border-orange-500 text-orange-600"
+                            : note.visibility === "group"
+                              ? "border-purple-500 text-purple-600"
+                              : "border-blue-300 text-blue-500"
+                        }`}
+                      >
                         {note.visibility.toUpperCase()}
                       </span>
 
-                      <span>|</span>
-                      <span className="font-semibold">Created:</span>
+                      <span className="ml-2">
+                        {note.comment_count !== undefined
+                          ? `💬 ${note.comment_count}`
+                          : "💬 0"}
+                      </span>
+                      <span className="ml-1">|</span>
+                      <span className="font-semibold ml-1">Created:</span>
                       {new Date(note.created_at).toLocaleDateString()}
                     </div>
                   </Link>
@@ -517,16 +587,19 @@ function DashboardContent() {
           <div className="p-10 text-center text-gray-500 bg-white rounded-lg shadow">
             No notes match your filter or search.
           </div>
-        )
-        }
-      </div >
-    </div >
+        )}
+      </div>
+    </div>
   );
 }
 
 export default function DashboardPage() {
   return (
-    <Suspense fallback={<div className="p-12 text-center text-lg">Loading Dashboard...</div>}>
+    <Suspense
+      fallback={
+        <div className="p-12 text-center text-lg">Loading Dashboard...</div>
+      }
+    >
       <DashboardContent />
     </Suspense>
   );

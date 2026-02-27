@@ -8,6 +8,7 @@ import { createClient } from "@/utils/supabase/client";
 import MarkdownRenderer from "./MarkdownRenderer";
 import VoteButtons from "./VoteButtons";
 import { getNote } from "@/app/notes/actions";
+import CommentSection from "./CommentSection";
 
 interface NoteFetcherProps {
   noteId: number;
@@ -25,6 +26,7 @@ interface NoteData {
   author_id: string; // To check ownership
   visibility: string;
   group_id: string | null;
+  version: number;
   profiles: { username: string } | { username: string }[] | null;
 }
 
@@ -129,9 +131,15 @@ export default function NoteFetcher({ noteId }: NoteFetcherProps) {
             in <span className="font-semibold">{note.course}</span> (
             {note.topic})
           </p>
-          <p className="text-sm mt-1">
-            Published: {new Date(note.created_at).toLocaleDateString()}
-          </p>
+          <div className="flex items-center gap-4 text-sm mt-1">
+            <p>
+              Published: {new Date(note.created_at).toLocaleDateString()}
+            </p>
+            <span className="text-gray-400">•</span>
+            <p className="font-medium text-gray-700">
+              Version {note.version}
+            </p>
+          </div>
           <div className="mt-4">
             <VoteButtons noteId={note.id} />
           </div>
@@ -216,6 +224,11 @@ export default function NoteFetcher({ noteId }: NoteFetcherProps) {
             )}
             <MarkdownRenderer markdown={note.content ?? ""} />
           </div>
+        )}
+
+        {/* Comment Section (Excluded for Private Notes) */}
+        {note.visibility !== "private" && (
+          <CommentSection noteId={note.id} currentUser={sessionUser} />
         )}
       </div>
     </div>

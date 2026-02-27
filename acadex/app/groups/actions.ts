@@ -203,14 +203,157 @@ export async function fetchUserGroups() {
 export async function getGroupById(groupId: string) {
     const { data, error } = await supabaseServer
         .from("groups")
-        .select("id, name, invite_code")
+        .select("*")
         .eq("id", groupId)
         .single();
 
     if (error) {
-        console.error("Fetch Group Error:", error);
+        console.error("Fetch Group Error Detail:", error);
         return null;
     }
 
+    // Normalize property names (database might have created_by)
+    return {
+        ...data,
+        creator_id: data.creator_id || data.created_by
+    };
+}
+
+export async function getGroupMessages(groupId: string) {
+    const { data: messages, error } = await supabaseServer
+        .from("group_messages")
+        .select(`
+            *,
+            profiles(username)
+        `)
+        .eq("group_id", groupId)
+        .order("created_at", { ascending: true });
+
+    if (error) {
+        console.error("Fetch Messages Error:", error);
+        return [];
+    }
+
+    return messages;
+}
+
+export async function sendGroupMessage(groupId: string, content: string) {
+    const cookieStore = await cookies();
+    const supabaseAuth = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+            cookies: {
+                getAll() { return cookieStore.getAll(); },
+                setAll(cookiesToSet) {
+                    try {
+                        cookiesToSet.forEach(({ name, value, options }) =>
+                            cookieStore.set(name, value, options)
+                        );
+                    } catch { }
+                },
+            },
+        }
+    );
+
+    const { data: { user } } = await supabaseAuth.auth.getUser();
+    if (!user) return { error: "Not authenticated" };
+
+    const { error } = await supabaseServer
+        .from("group_messages")
+        .insert({
+            group_id: groupId,
+            user_id: user.id,
+            content,
+        });
+
+    if (error) {
+        console.error("Send Message Error:", error);
+        return { error: "Failed to send message" };
+    }
+
+    return { success: true };
+}
+
+export async function getGroupMembers(groupId: string) {
+    const { data, error } = await supabaseServer
+        .from("group_members")
+        .select(`
+            id,
+            user_id,
+            role,
+            joined_at,
+            profiles:user_id(username)
+        `)
+        .eq("group_id", groupId);
+
+    if (error) {
+        console.error("Fetch Members Error Detail:", error);
+        return [];
+    }
+
     return data;
+}
+
+export async function getGroupPageData(groupId: string) {
+    const cookieStore = await cookies();
+    const supabaseAuth = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+            cookies: {
+                getAll() { return cookieStore.getAll(); },
+                setAll(cookiesToSet) {
+                    try {
+                        cookiesToSet.forEach(({ name, value, options }) =>
+                            cookieStore.set(name, value, options)
+                        );
+                    } catch { }
+                },
+            },
+        }
+    );
+
+    const { data: { user } } = await supabaseAuth.auth.getUser();
+    if (!user) return { error: "Not authenticated" };
+
+    const [group, members] = await Promise.all([
+        getGroupById(groupId),
+        getGroupMembers(groupId)
+    ]);
+
+    if (!group) return { error: "Group not found" };
+
+    const userRole = members.find(m => m.user_id === user.id)?.role || null;
+
+    // Check if user is a member
+    const creatorId = (group as any).creator_id;
+    if (!userRole && creatorId !== user.id) {
+        // Optional: restriction logic here
+    }
+
+    return {
+        group,
+        members,
+        userRole,
+        user
+    };
+}
+
+export async function getGroupMessage(messageId: number) {
+    const { data: message, error } = await supabaseServer
+        .from("group_messages")
+        .select(`
+            *,
+            profiles(username)
+        `)
+        .eq("id", messageId)
+        .single();
+
+    if (error) {
+        console.error("Fetch Single Message Error:", error);
+        return null;
+    }
+
+    return message;
 }
