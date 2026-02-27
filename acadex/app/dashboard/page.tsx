@@ -325,6 +325,12 @@ function DashboardContent() {
               >
                 👥 Manage Groups
               </Link>
+              <Link
+                href="/zen"
+                className="block text-purple-600 font-bold hover:underline"
+              >
+                🧘 Zen Mode
+              </Link>
             </div>
           </div>
 
@@ -365,11 +371,10 @@ function DashboardContent() {
                 <button
                   key={v}
                   onClick={() => setVisibilityFilter(v)}
-                  className={`px-3 py-1 text-xs font-bold rounded-md transition ${
-                    visibilityFilter === v
+                  className={`px-3 py-1 text-xs font-bold rounded-md transition ${visibilityFilter === v
                       ? "bg-white text-blue-600 shadow-sm"
                       : "text-gray-500 hover:text-gray-700"
-                  }`}
+                    }`}
                 >
                   {v.toUpperCase()}
                 </button>
@@ -418,10 +423,9 @@ function DashboardContent() {
             <button
               onClick={() => setFilter("all")}
               className={`px-3 py-1 text-sm font-semibold rounded border
-                ${
-                  filter === "all"
-                    ? "bg-blue-600 text-white border-blue-600"
-                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
+                ${filter === "all"
+                  ? "bg-blue-600 text-white border-blue-600"
+                  : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
                 }
               `}
             >
@@ -431,10 +435,9 @@ function DashboardContent() {
             <button
               onClick={() => setFilter("notes")}
               className={`px-3 py-1 text-sm font-semibold rounded border
-                ${
-                  filter === "notes"
-                    ? "bg-blue-600 text-white border-blue-600"
-                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
+                ${filter === "notes"
+                  ? "bg-blue-600 text-white border-blue-600"
+                  : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
                 }
               `}
             >
@@ -444,10 +447,9 @@ function DashboardContent() {
             <button
               onClick={() => setFilter("pdfs")}
               className={`px-3 py-1 text-sm font-semibold rounded border
-                ${
-                  filter === "pdfs"
-                    ? "bg-blue-600 text-white border-blue-600"
-                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
+                ${filter === "pdfs"
+                  ? "bg-blue-600 text-white border-blue-600"
+                  : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
                 }
               `}
             >
@@ -522,13 +524,12 @@ function DashboardContent() {
                       )}
 
                       <span
-                        className={`ml-2 px-2 py-0.5 text-xs font-semibold rounded border ${
-                          note.visibility === "private"
+                        className={`ml-2 px-2 py-0.5 text-xs font-semibold rounded border ${note.visibility === "private"
                             ? "border-orange-500 text-orange-600"
                             : note.visibility === "group"
                               ? "border-purple-500 text-purple-600"
                               : "border-blue-300 text-blue-500"
-                        }`}
+                          }`}
                       >
                         {note.visibility.toUpperCase()}
                       </span>

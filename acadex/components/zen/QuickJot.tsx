@@ -1,17 +1,17 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { ChevronRight, Pencil, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function QuickJot() {
     const [isOpen, setIsOpen] = useState(false);
-    const [note, setNote] = useState("");
-
-    useEffect(() => {
-        const savedNote = localStorage.getItem("zen-quick-jot");
-        if (savedNote) setNote(savedNote);
-    }, []);
+    const [note, setNote] = useState(() => {
+        if (typeof window !== "undefined") {
+            return localStorage.getItem("zen-quick-jot") || "";
+        }
+        return "";
+    });
 
     const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         const newVal = e.target.value;

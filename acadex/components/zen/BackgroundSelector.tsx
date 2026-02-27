@@ -16,11 +16,11 @@ export type BackgroundOption = {
 // In a real app, these would be served from Cloudinary
 const BACKGROUNDS: BackgroundOption[] = [
     {
-        id: "rain",
-        name: "Rainy Cafe",
+        id: "ocean",
+        name: "Ocean Waves",
         type: "video",
         url: "https://res.cloudinary.com/demo/video/upload/v1689625907/samples/landscapes/beach-waves.mp4", // Placeholder: Beach Waves
-        thumbnail: "bg-slate-800",
+        thumbnail: "bg-blue-800",
     },
     {
         id: "forest",
