@@ -289,12 +289,12 @@ function DashboardContent() {
           <div className="bg-white p-6 rounded-xl shadow-lg border-l-4 border-green-500">
             <p className="text-sm font-medium text-gray-500">Quick Actions</p>
             <div className="mt-2 space-y-2">
-              <Link
+              {/* <Link
                 href="/zen"
                 className="block text-indigo-500 hover:scale-105 transition-transform font-bold"
               >
                 🧘 Enter Zen Mode
-              </Link>
+              </Link> */}
               <Link
                 href="/schedule"
                 className="block text-green-500 hover:underline"
@@ -336,7 +336,8 @@ function DashboardContent() {
                 className="block text-blue-600 font-bold hover:underline border-t pt-2 mt-2"
               >
                 🧠 Launch Neural Nexus
-                href="/zen"
+              </Link>
+              <Link href="/zen"
                 className="block text-purple-600 font-bold hover:underline"
               >
                 🧘 Zen Mode
@@ -382,8 +383,8 @@ function DashboardContent() {
                   key={v}
                   onClick={() => setVisibilityFilter(v)}
                   className={`px-3 py-1 text-xs font-bold rounded-md transition ${visibilityFilter === v
-                      ? "bg-white text-blue-600 shadow-sm"
-                      : "text-gray-500 hover:text-gray-700"
+                    ? "bg-white text-blue-600 shadow-sm"
+                    : "text-gray-500 hover:text-gray-700"
                     }`}
                 >
                   {v.toUpperCase()}
@@ -535,10 +536,10 @@ function DashboardContent() {
 
                       <span
                         className={`ml-2 px-2 py-0.5 text-xs font-semibold rounded border ${note.visibility === "private"
-                            ? "border-orange-500 text-orange-600"
-                            : note.visibility === "group"
-                              ? "border-purple-500 text-purple-600"
-                              : "border-blue-300 text-blue-500"
+                          ? "border-orange-500 text-orange-600"
+                          : note.visibility === "group"
+                            ? "border-purple-500 text-purple-600"
+                            : "border-blue-300 text-blue-500"
                           }`}
                       >
                         {note.visibility.toUpperCase()}
