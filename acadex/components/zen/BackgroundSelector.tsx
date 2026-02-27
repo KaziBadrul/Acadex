@@ -8,17 +8,19 @@ export type BackgroundOption = {
     id: string;
     name: string;
     type: "video" | "image";
-    url: string;
+    url: string; // Ideally Cloudinary URLs
     thumbnail: string;
 };
 
+// Using high-quality placeholder Nature videos/images for demo
+// In a real app, these would be served from Cloudinary
 const BACKGROUNDS: BackgroundOption[] = [
     {
-        id: "rain",
-        name: "Rainy Cafe",
+        id: "ocean",
+        name: "Ocean Waves",
         type: "video",
-        url: "https://res.cloudinary.com/demo/video/upload/v1689625907/samples/landscapes/beach-waves.mp4",
-        thumbnail: "bg-slate-800",
+        url: "https://res.cloudinary.com/demo/video/upload/v1689625907/samples/landscapes/beach-waves.mp4", // Placeholder: Beach Waves
+        thumbnail: "bg-blue-800",
     },
     {
         id: "forest",

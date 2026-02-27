@@ -41,6 +41,7 @@ export default function ZenLayout() {
                         autoPlay
                         loop
                         muted
+                        playsInline
                         className="w-full h-full object-cover opacity-60 transition-opacity duration-1000"
                     />
                 ) : (
@@ -76,7 +77,7 @@ export default function ZenLayout() {
             <PomodoroTimer />
             <QuickJot />
 
-            {/* Center Motivational Quote */}
+            {/* Center Motivational Quote (Fade out on interaction?) - Optional Ambience */}
             <div className="absolute bottom-12 left-1/2 -translate-x-1/2 text-white/30 text-xs tracking-[0.2em] font-light uppercase select-none pointer-events-none z-10">
                 Focus on now
             </div>

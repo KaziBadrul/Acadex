@@ -30,7 +30,7 @@ export default function Page() {
 
   const calendarEvents = useMemo(
     () => toFullCalendarEvents(routine),
-    [routine]
+    [routine],
   );
 
   async function onUpload(file: File) {
