@@ -230,127 +230,78 @@ function DashboardContent() {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-gray-50 py-10">
-      <div className="max-w-6xl mx-auto px-4">
-        {/* Header */}
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 via-white to-gray-100 py-12">
+      <div className="max-w-7xl mx-auto px-6">
+        {/* Top bar */}
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-3">
+              <img src="/acadexLogo.png" alt="Acadex Logo" width="160" />
+            </div>
 
-        <div className="flex justify-between items-center mb-8 border-b pb-4">
-          <h1 className="text-4xl font-bold text-gray-900">
-            <img src="/acadexLogo.png" alt="Acadex Logo" width="200" />
-          </h1>
+            <div className="hidden md:flex items-center bg-white border rounded-full shadow-sm px-4 py-2 w-[560px]">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-gray-400 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z" />
+              </svg>
+              <input
+                className="outline-none w-full text-sm text-gray-600"
+                placeholder="Search notes, courses, topics..."
+              />
+            </div>
+          </div>
 
-          <Link
-            href="/settings"
-            className="p-2 text-gray-600 hover:bg-gray-200 rounded-full transition"
-            title="Settings"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+          <div className="flex items-center gap-4">
+            <Link
+              href="/settings"
+              className="hidden md:flex items-center gap-2 bg-white px-3 py-2 rounded-full shadow-sm border"
+              title="Settings"
             >
-              <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.74v-.47a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
-              <circle cx="12" cy="12" r="3" />
-            </svg>
-          </Link>
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-600">
+                <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.74v-.47a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+              <span className="text-sm text-gray-700">Settings</span>
+            </Link>
+
+            <div className="flex items-center gap-3">
+              <div className="text-right">
+                <div className="text-sm font-semibold text-gray-800">{user?.username}</div>
+                <div className="text-xs text-gray-400">ID: {user?.id.slice(0, 6)}...</div>
+              </div>
+              <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-purple-400 to-indigo-400 flex items-center justify-center text-white font-bold shadow-md">{user?.username?.[0]?.toUpperCase() || 'U'}</div>
+            </div>
+          </div>
         </div>
 
-        {/* --- Quick Stats and Actions --- */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-          <div className="bg-white p-6 rounded-xl shadow-lg border-l-4 border-blue-500">
-            <p className="text-sm font-medium text-gray-500">
-              Total Available Notes
-            </p>
-            <p className="text-4xl font-extrabold text-gray-900 mt-1">
-              {notes.length}
-            </p>
-            <div className="flex flex-col">
-              <Link
-                href="/notes/create"
-                className="mt-4 text-blue-500 hover:text-blue-700 text-sm font-medium"
-              >
-                ➕ Create New Note
-              </Link>
-              <Link
-                href="/notes/upload"
-                className="mt-2 text-blue-500 hover:text-blue-700 text-sm font-medium"
-              >
-                📥 Upload New Note
-              </Link>
+        {/* --- Quick Stats and Actions (styled) --- */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
+          <div className="col-span-1 lg:col-span-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-6 rounded-2xl shadow-xl">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm opacity-90">Welcome back,</p>
+                <h2 className="text-2xl font-bold mt-1">{user?.username}</h2>
+                <p className="mt-3 text-sm opacity-90 max-w-xl">Explore shared notes, upload new study material, or start a fresh note. Your community learning hub is ready.</p>
+              </div>
+              <div className="hidden md:flex flex-col items-end">
+                <p className="text-sm opacity-90">Total Available</p>
+                <p className="text-3xl font-extrabold mt-2">{notes.length}</p>
+                <div className="mt-4 flex gap-2">
+                  <Link href="/notes/create" className="bg-white/20 hover:bg-white/30 text-white px-3 py-2 rounded-full text-sm">➕ Create</Link>
+                  <Link href="/notes/upload" className="bg-white/20 hover:bg-white/30 text-white px-3 py-2 rounded-full text-sm">📥 Upload</Link>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-xl shadow-lg border-l-4 border-green-500">
-            <p className="text-sm font-medium text-gray-500">Quick Actions</p>
-            <div className="mt-2 space-y-2">
-              {/* <Link
-                href="/zen"
-                className="block text-indigo-500 hover:scale-105 transition-transform font-bold"
-              >
-                🧘 Enter Zen Mode
-              </Link> */}
-              <Link
-                href="/schedule"
-                className="block text-green-500 hover:underline"
-              >
-                🗓️ View Schedule
-              </Link>
-              <Link
-                href="/resources"
-                className="block text-green-500 hover:underline"
-              >
-                📚 Resource Repository
-              </Link>
-              <Link
-                href="/requests"
-                className="block text-green-500 hover:underline"
-              >
-                📝 Request Note (Community)
-              </Link>
-              <Link
-                href="/reminder/set"
-                className="block text-green-500 hover:underline"
-              >
-                ⏰ Set Reminder
-              </Link>
-              <Link
-                href="/reminder"
-                className="block text-green-500 hover:underline"
-              >
-                🔔 View Reminder
-              </Link>
-              <Link
-                href="/groups"
-                className="block text-green-500 font-bold hover:underline border-t pt-2 mt-2"
-              >
-                👥 Manage Groups
-              </Link>
-              <Link
-                href="/nexus"
-                className="block text-blue-600 font-bold hover:underline border-t pt-2 mt-2"
-              >
-                🧠 Launch Neural Nexus
-              </Link>
-              <Link href="/zen"
-                className="block text-purple-600 font-bold hover:underline"
-              >
-                🧘 Zen Mode
-              </Link>
+          <div className="bg-white p-5 rounded-2xl shadow-md border">
+            <p className="text-sm text-gray-500">Quick Actions</p>
+            <div className="mt-3 grid gap-2">
+              <Link href="/schedule" className="text-sm text-gray-700 hover:text-gray-900">🗓️ View Schedule</Link>
+              <Link href="/resources" className="text-sm text-gray-700 hover:text-gray-900">📚 Resource Repository</Link>
+              <Link href="/requests" className="text-sm text-gray-700 hover:text-gray-900">📝 Request Note</Link>
+              <Link href="/reminder/set" className="text-sm text-gray-700 hover:text-gray-900">⏰ Set Reminder</Link>
+              <Link href="/groups" className="text-sm text-gray-700 font-semibold hover:text-gray-900">👥 Manage Groups</Link>
             </div>
-          </div>
-
-          <div className="bg-white p-6 rounded-xl shadow-lg border-l-4 border-yellow-500">
-            <p className="text-sm font-medium text-gray-500">User Profile</p>
-            <p className="font-bold text-lg text-gray-900">{user.username}</p>
-            <p className="font-mono text-sm truncate text-gray-400">
-              ID: {user.id}
-            </p>
           </div>
         </div>
 
@@ -485,112 +436,64 @@ function DashboardContent() {
               const isOwner = user.id === note.author_id;
 
               return (
-                <div
-                  key={note.id}
-                  className="relative group bg-white rounded-lg shadow hover:shadow-md transition"
-                >
-                  <Link href={`/notes/${note.id}`} className="block p-5 pb-2">
-                    <div className="flex items-center gap-2">
-                      {isOwner && (
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="24"
-                          height="24"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          className="text-blue-600"
-                        >
-                          <title>You created this note</title>
-                          <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
-                          <circle cx="12" cy="7" r="4" />
-                        </svg>
-                      )}
-                      <h3 className="text-xl font-bold text-blue-600">
-                        {note.title}
-                      </h3>
-                    </div>
+                <div key={note.id} className="relative group bg-white rounded-2xl shadow-sm hover:shadow-lg transition transform hover:-translate-y-0.5 border border-gray-100 overflow-hidden">
+                  <Link href={`/notes/${note.id}`} className="block p-5 pb-3">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-1.5 h-12 rounded-full bg-gradient-to-b from-indigo-500 to-purple-500" />
+                        <div>
+                          <div className="flex items-center gap-2">
+                            {isOwner && (
+                              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-indigo-600">
+                                <title>You created this note</title>
+                                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+                                <circle cx="12" cy="7" r="4" />
+                              </svg>
+                            )}
+                            <h3 className="text-lg font-semibold text-gray-900">{note.title}</h3>
+                          </div>
 
-                    <div className="text-sm text-gray-500 mt-1 flex flex-wrap items-center gap-1">
-                      <span className="font-semibold">Course:</span>
-                      {note.course}
-                      <span>|</span>
+                          <p className="text-sm text-gray-500 mt-2">{note.course} • {note.topic}</p>
+                          <p className="text-sm text-gray-600 mt-3 max-w-full text-ellipsis overflow-hidden" style={{maxHeight: '3.2rem'}}>{note.content ? note.content.slice(0, 220) : ''}{note.content && note.content.length > 220 ? '...' : ''}</p>
+                        </div>
+                      </div>
 
-                      <span className="font-semibold">Topic:</span>
-                      {note.topic}
-
-                      {isPdf && (
-                        <span className="ml-2 px-2 py-0.5 text-xs font-semibold border border-red-500 text-red-600 rounded">
-                          PDF
-                        </span>
-                      )}
-
-                      {isScanned && (
-                        <span className="ml-2 px-2 py-0.5 text-xs font-semibold border border-green-500 text-green-600 rounded">
-                          Scanned
-                        </span>
-                      )}
-
-                      <span
-                        className={`ml-2 px-2 py-0.5 text-xs font-semibold rounded border ${note.visibility === "private"
-                          ? "border-orange-500 text-orange-600"
-                          : note.visibility === "group"
-                            ? "border-purple-500 text-purple-600"
-                            : "border-blue-300 text-blue-500"
-                          }`}
-                      >
-                        {note.visibility.toUpperCase()}
-                      </span>
-
-                      <span className="ml-2">
-                        {note.comment_count !== undefined
-                          ? `💬 ${note.comment_count}`
-                          : "💬 0"}
-                      </span>
-                      <span className="ml-1">|</span>
-                      <span className="font-semibold ml-1">Created:</span>
-                      {new Date(note.created_at).toLocaleDateString()}
+                      <div className="flex items-start gap-3 text-sm text-gray-500">
+                        <div className="text-right">
+                          <div className="font-medium">{note.comment_count ?? 0} comments</div>
+                          <div className="text-xs mt-1">{new Date(note.created_at).toLocaleDateString()}</div>
+                        </div>
+                      </div>
                     </div>
                   </Link>
 
-                  <div className="px-5 pb-4 flex justify-between">
-                    <VoteButtons
-                      noteId={note.id}
-                      initialUpvotes={voteData[note.id]?.up || 0}
-                      initialDownvotes={voteData[note.id]?.down || 0}
-                      initialUserVote={voteData[note.id]?.userVote || null}
-                    />
-                  </div>
+                  <div className="px-5 pb-4 flex items-center justify-between border-t border-gray-100">
+                    <div>
+                      <VoteButtons
+                        noteId={note.id}
+                        initialUpvotes={voteData[note.id]?.up || 0}
+                        initialDownvotes={voteData[note.id]?.down || 0}
+                        initialUserVote={voteData[note.id]?.userVote || null}
+                      />
+                    </div>
 
-                  {isOwner && (
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        deleteNote(note.id);
-                      }}
-                      className="absolute top-4 right-4 p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full transition-colors opacity-0 group-hover:opacity-100"
-                      title="Delete Note"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="20"
-                        height="20"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
+                    {isOwner && (
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          deleteNote(note.id);
+                        }}
+                        className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"
+                        title="Delete Note"
                       >
-                        <path d="M3 6h18" />
-                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                      </svg>
-                    </button>
-                  )}
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M3 6h18" />
+                          <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                          <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
                 </div>
               );
             })}
