@@ -1,24 +1,18 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import ThemeProvider from "@/components/theme-provider";
-import BackButton from "@/components/BackButton";
-import UsernameWarning from "@/components/UsernameWarning";
 import ReminderNotificationProvider from "@/components/ReminderNotificationProvider";
+import AppShell from "@/components/AppShell";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-  title: "Acadex",
-  description: "Share your notes!",
+  title: "Acadex Workspace",
+  description: "Minimal premium workspace for notes and scheduling.",
 };
 
 export default function RootLayout({
@@ -27,15 +21,28 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* Prevent dark mode flash — runs before React hydrates */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                const theme = localStorage.getItem('theme');
+                if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                  document.documentElement.classList.add('dark');
+                }
+              } catch (_) {}
+            `,
+          }}
+        />
+      </head>
+      <body className={`${inter.variable} font-sans antialiased`}>
         <ThemeProvider>
           <ReminderNotificationProvider>
-            <BackButton />
-            {/* <UsernameWarning /> */}
-            {children}
+            <AppShell>
+              {children}
+            </AppShell>
           </ReminderNotificationProvider>
         </ThemeProvider>
       </body>

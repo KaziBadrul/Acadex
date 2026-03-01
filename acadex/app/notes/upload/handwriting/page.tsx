@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 
@@ -61,9 +61,9 @@ export default function Handwriting() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-6">
-      <div className="w-full max-w-xl bg-white p-10 rounded-xl shadow-2xl">
+      <div className="w-full max-w-xl bg-card p-10 rounded-xl shadow-2xl">
         <h1 className="text-4xl font-extrabold text-blue-700 mb-4 text-center">
-          Handwriting → Text
+          Handwriting â†’ Text
         </h1>
 
         <p className="text-gray-600 text-center mb-8">
@@ -140,7 +140,7 @@ export default function Handwriting() {
                   : "bg-blue-500 hover:bg-blue-600"
               }`}
           >
-            {loading ? "Extracting…" : "Extract Text & Save"}
+            {loading ? "Extractingâ€¦" : "Extract Text & Save"}
           </button>
         </form>
 
@@ -163,3 +163,5 @@ export default function Handwriting() {
     </div>
   );
 }
+
+

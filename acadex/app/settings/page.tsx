@@ -3,12 +3,13 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
-import Link from 'next/link';
 import { updateProfile, getProfile } from './actions';
+import { Settings, User, Moon, LogOut, Loader2, Save, Mail, Fingerprint } from 'lucide-react';
 
 export default function SettingsPage() {
     const [user, setUser] = useState<{ id: string; email?: string; username: string } | null>(null);
     const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
     const [darkMode, setDarkMode] = useState(false);
     const router = useRouter();
     const supabase = createClient();
@@ -59,96 +60,144 @@ export default function SettingsPage() {
     };
 
     if (loading) {
-        return <div className="p-12 text-center text-lg">Loading Settings...</div>;
+        return (
+            <div className="w-full pb-10 flex justify-center items-center min-h-[50vh]">
+                <div className="flex flex-col items-center text-primary/40 gap-4 animate-pulse">
+                    <Loader2 className="w-8 h-8 animate-spin" />
+                    <p className="font-medium">Loading preferences...</p>
+                </div>
+            </div>
+        );
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 py-10 transition-colors duration-300">
-            <div className="max-w-2xl mx-auto px-4">
-
-                {/* Header */}
-                <div className="flex items-center mb-8">
-                    <Link href="/dashboard" className="mr-4 p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-800 transition">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M19 12H5m7-7-7 7 7 7" />
-                        </svg>
-                    </Link>
-                    <h1 className="text-3xl font-bold">Settings</h1>
+        <div className="w-full pb-10">
+            <div className="flex items-center gap-3 mb-8 border-b border-muted/20 pb-4">
+                <div className="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center text-primary/70">
+                    <Settings className="w-6 h-6" />
                 </div>
+                <div>
+                    <h1 className="text-3xl font-bold text-primary tracking-tight">
+                        Settings
+                    </h1>
+                    <p className="text-primary/60 text-sm mt-1">
+                        Manage your account preferences and application settings.
+                    </p>
+                </div>
+            </div>
 
+            <div className="max-w-3xl space-y-8">
                 {/* Profile Section */}
-                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 mb-6">
-                    <h2 className="text-xl font-semibold mb-4 border-b dark:border-gray-700 pb-2">Profile</h2>
-                    <div className="space-y-3">
-                        <div>
-                            <label className="block text-sm text-gray-500 dark:text-gray-400">Username</label>
-                            <div className="flex gap-2 items-center">
-                                <input
-                                    type="text"
-                                    value={user?.username || ''}
-                                    onChange={(e) => setUser(prev => prev ? { ...prev, username: e.target.value } : null)}
-                                    className="font-medium text-lg bg-transparent border-b border-gray-300 dark:border-gray-600 focus:border-blue-500 outline-none w-full"
-                                />
-                                <button
-                                    onClick={async () => {
-                                        if (!user?.username) return;
+                <div className="bg-card rounded-2xl shadow-subtle border border-muted/20 overflow-hidden">
+                    <div className="px-6 py-5 border-b border-muted/10 bg-muted/5 flex items-center gap-2 text-primary font-bold">
+                        <User className="w-5 h-5 text-accent" />
+                        <h2>Profile Information</h2>
+                    </div>
 
-                                        const { success, error } = await updateProfile(user.id, user.username);
+                    <div className="p-6 space-y-6">
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-xs font-semibold text-primary/60 uppercase tracking-wider mb-2">Display Name</label>
+                                <div className="flex flex-col sm:flex-row gap-3">
+                                    <input
+                                        type="text"
+                                        value={user?.username || ''}
+                                        onChange={(e) => setUser(prev => prev ? { ...prev, username: e.target.value } : null)}
+                                        className="flex-1 border border-muted/40 bg-background/50 rounded-xl px-4 py-2.5 text-primary placeholder:text-muted focus:ring-2 focus:ring-accent focus:border-accent outline-none transition-all font-medium"
+                                        placeholder="Enter display name"
+                                    />
+                                    <button
+                                        onClick={async () => {
+                                            if (!user?.username) return;
+                                            setSaving(true);
+                                            const { success, error } = await updateProfile(user.id, user.username);
+                                            setSaving(false);
 
-                                        if (!success) {
-                                            alert('Error updating username: ' + error);
-                                        } else {
-                                            alert('Username updated successfully!');
-                                            // Force reload to update global state/warnings if needed
-                                            window.location.reload();
-                                        }
-                                    }}
-                                    className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition"
-                                >
-                                    Save
-                                </button>
+                                            if (!success) {
+                                                alert('Error updating username: ' + error);
+                                            } else {
+                                                alert('Username updated successfully!');
+                                                window.location.reload();
+                                            }
+                                        }}
+                                        disabled={saving}
+                                        className="px-6 py-2.5 bg-primary text-white font-medium rounded-xl hover:bg-primary/90 transition-all flex items-center justify-center gap-2 min-w-[120px] disabled:opacity-50"
+                                    >
+                                        {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                                        {saving ? 'Saving...' : 'Save'}
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-                        <div>
-                            <label className="block text-sm text-gray-500 dark:text-gray-400">Email</label>
-                            <p className="font-medium text-lg">{user?.email}</p>
-                        </div>
-                        <div>
-                            <label className="block text-sm text-gray-500 dark:text-gray-400">User ID</label>
-                            <p className="font-mono text-xs text-gray-400">{user?.id}</p>
+
+                            <div className="grid sm:grid-cols-2 gap-6 pt-4">
+                                <div className="bg-background/50 border border-muted/10 rounded-xl p-4 flex items-start gap-3">
+                                    <div className="w-8 h-8 rounded-lg bg-primary/5 flex items-center justify-center text-primary/50 shrink-0">
+                                        <Mail className="w-4 h-4" />
+                                    </div>
+                                    <div className="overflow-hidden">
+                                        <label className="block text-[11px] font-bold text-primary/40 uppercase tracking-wider mb-0.5">Email Address</label>
+                                        <p className="font-medium text-primary/80 truncate">{user?.email}</p>
+                                    </div>
+                                </div>
+
+                                <div className="bg-background/50 border border-muted/10 rounded-xl p-4 flex items-start gap-3">
+                                    <div className="w-8 h-8 rounded-lg bg-primary/5 flex items-center justify-center text-primary/50 shrink-0">
+                                        <Fingerprint className="w-4 h-4" />
+                                    </div>
+                                    <div className="overflow-hidden">
+                                        <label className="block text-[11px] font-bold text-primary/40 uppercase tracking-wider mb-0.5">Account ID</label>
+                                        <p className="font-mono text-xs text-primary/60 truncate mt-1">{user?.id}</p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 {/* Appearance Section */}
-                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 mb-6">
-                    <h2 className="text-xl font-semibold mb-4 border-b dark:border-gray-700 pb-2">Appearance</h2>
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="font-medium">Dark Mode</p>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">Switch between light and dark themes</p>
+                <div className="bg-card rounded-2xl shadow-subtle border border-muted/20 overflow-hidden divide-y divide-muted/10">
+                    <div className="px-6 py-5 bg-muted/5 flex items-center gap-2 text-primary font-bold">
+                        <Moon className="w-5 h-5 text-accent" />
+                        <h2>Appearance & Preferences</h2>
+                    </div>
+
+                    <div className="p-6">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="font-bold text-primary text-[15px]">Dark Mode</p>
+                                <p className="text-sm text-primary/50 mt-0.5">Toggle a darker, high-contrast theme</p>
+                            </div>
+                            <button
+                                onClick={toggleDarkMode}
+                                className={`relative w-14 h-8 flex items-center rounded-full transition-colors duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 ${darkMode ? 'bg-primary' : 'bg-muted/30'}`}
+                            >
+                                <span className="sr-only">Toggle dark mode</span>
+                                <div className={`bg-card w-6 h-6 rounded-full shadow-sm transform transition-transform duration-300 ease-in-out flex items-center justify-center ${darkMode ? 'translate-x-7' : 'translate-x-1'}`}>
+                                    {darkMode && <Moon className="w-3.5 h-3.5 text-primary" />}
+                                </div>
+                            </button>
                         </div>
-                        <button
-                            onClick={toggleDarkMode}
-                            className={`w-14 h-8 flex items-center rounded-full p-1 duration-300 ease-in-out ${darkMode ? 'bg-blue-600' : 'bg-gray-300'}`}
-                        >
-                            <div className={`bg-white w-6 h-6 rounded-full shadow-md transform duration-300 ease-in-out ${darkMode ? 'translate-x-6' : ''}`}></div>
-                        </button>
                     </div>
                 </div>
 
                 {/* Account Actions */}
-                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6">
-                    <h2 className="text-xl font-semibold mb-4 border-b dark:border-gray-700 pb-2">Account</h2>
-                    <button
-                        onClick={handleLogout}
-                        className="w-full py-3 px-4 bg-red-500 text-white font-semibold rounded-lg shadow-md hover:bg-red-600 transition text-center"
-                    >
-                        Log Out
-                    </button>
+                <div className="bg-card rounded-2xl shadow-subtle border border-red-100 overflow-hidden">
+                    <div className="p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+                        <div>
+                            <h2 className="font-bold text-red-600 text-[15px]">Danger Zone</h2>
+                            <p className="text-sm text-red-600/70 mt-0.5">Sign out of your active session on this device.</p>
+                        </div>
+                        <button
+                            onClick={handleLogout}
+                            className="w-full sm:w-auto px-6 py-2.5 bg-red-50 text-red-600 font-bold tracking-wide rounded-xl border border-red-200 hover:bg-red-100 transition-all flex items-center justify-center gap-2 shrink-0"
+                        >
+                            <LogOut className="w-4 h-4" /> Sign Out
+                        </button>
+                    </div>
                 </div>
-
             </div>
         </div>
     );
 }
+
+

@@ -1,8 +1,9 @@
-import NoteForm from '@/components/NoteForm'
+﻿import NoteForm from '@/components/NoteForm'
 import React from 'react'
 
 export default function NoteCreate() {
-    return <div className='bg-white'>
+    return <div className='bg-card'>
         <NoteForm />
     </div>
 }
+
