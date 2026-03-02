@@ -13,6 +13,8 @@ import {
     X,
     Sparkles,
     Network,
+    ChevronLeft,
+    ChevronRight,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -30,6 +32,7 @@ const SIDEBAR_ITEMS = [
 export default function AppShell({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
     const [isOpen, setIsOpen] = useState(false);
+    const [isCollapsed, setIsCollapsed] = useState(false);
 
     // Do not wrap login page or landing page in the shell
     if (pathname === "/login" || pathname === "/") {
@@ -58,15 +61,20 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
             {/* Sidebar */}
             <aside className={`
-        fixed md:sticky top-0 left-0 z-50 h-[100dvh] w-64 bg-[#30364f] border-r border-white/10 shadow-subtle
-        transform transition-transform duration-300 ease-in-out
+        fixed md:sticky top-0 left-0 z-50 h-[100dvh] bg-[#30364f] border-r border-white/10 shadow-subtle
+        transform transition-all duration-300 ease-in-out
         ${isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
-        flex flex-col
+        ${isCollapsed ? "md:w-20" : "md:w-64"}
+        w-64 flex flex-col
       `}>
                 {/* Brand */}
-                <div className="w-full aspect-square flex items-center justify-center border-b border-white/10 p-2">
-                    <Link href="/dashboard" className="flex items-center w-full h-full">
-                        <img src="/ACADEX.png" alt="Acadex" className="w-full h-full object-contain" />
+                <div className={`w-full flex items-center justify-center border-b border-white/10 p-2 transition-all duration-300 ${isCollapsed ? "aspect-square" : "h-24"}`}>
+                    <Link href="/dashboard" className="flex items-center w-full h-full overflow-hidden">
+                        <img
+                            src="/ACADEX.png"
+                            alt="Acadex"
+                            className={`transition-all duration-300 object-contain ${isCollapsed ? "scale-150 min-w-[80px]" : "w-full h-full"}`}
+                        />
                     </Link>
                 </div>
 
@@ -90,14 +98,28 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                                 className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${isActive
                                     ? "bg-accent text-primary font-semibold"
                                     : "text-white/70 hover:bg-card/10 hover:text-white"
-                                    }`}
+                                    } ${isCollapsed ? "justify-center px-2" : ""}`}
+                                title={isCollapsed ? item.name : ""}
                             >
-                                <Icon className={`w-5 h-5 ${isActive ? "text-primary" : "text-white/60"}`} />
-                                {item.name}
+                                <Icon className={`w-5 h-5 flex-shrink-0 ${isActive ? "text-primary" : "text-white/60"}`} />
+                                <span className={`transition-all duration-300 whitespace-nowrap overflow-hidden ${isCollapsed ? "w-0 opacity-0" : "w-auto opacity-100"}`}>
+                                    {item.name}
+                                </span>
                             </Link>
                         );
                     })}
                 </nav>
+
+                {/* Collapse Toggle (Desktop Only) */}
+                <div className="hidden md:flex p-4 border-t border-white/5">
+                    <button
+                        onClick={() => setIsCollapsed(!isCollapsed)}
+                        className="w-full flex items-center justify-center p-2 rounded-xl text-white/50 hover:bg-card/10 hover:text-white transition-all"
+                        title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+                    >
+                        {isCollapsed ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
+                    </button>
+                </div>
 
                 {/* User context or bottom links could go here */}
             </aside>
