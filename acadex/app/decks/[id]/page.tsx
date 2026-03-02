@@ -30,7 +30,7 @@ export default async function DeckPage({ params }: DeckPageProps) {
     );
   }
 
-  const cards = (deck.flashcards || []).map((c: any) => ({
+  const cards = (deck.flashcards || []).map((c: { id: number; question: string; answer: string }) => ({
     id: c.id.toString(),
     front: c.question,
     back: c.answer,
@@ -40,7 +40,7 @@ export default async function DeckPage({ params }: DeckPageProps) {
     <div className="min-h-screen bg-background py-16">
       <div className="max-w-3xl mx-auto px-6">
         <h1 className="text-3xl font-bold mb-6">{deck.title}</h1>
-        <DeckReview cards={cards} backTo={`/notes/${deck.note_id}`} />
+        <DeckReview deckId={deckId} cards={cards} backTo={`/notes/${deck.note_id}`} />
       </div>
     </div>
   );

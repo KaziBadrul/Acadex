@@ -9,7 +9,7 @@ import VoteButtons from "@/components/VoteButtons";
 import { getGroupById } from "../groups/actions";
 import {
   FileText, Plus, Upload, BookOpen, Clock, Users, Database,
-  HelpCircle, Settings, Bell, Search, Filter, Trash2, Shield
+  HelpCircle, Settings, Bell, Search, Filter, Trash2, Shield, Trophy
 } from "lucide-react";
 import BrandLoader from "@/components/BrandLoader";
 
@@ -27,7 +27,7 @@ interface Note {
   comment_count?: number;
 }
 
-type FilterType = "all" | "notes" | "pdfs";
+type FilterType = "all" | "notes" | "pdfs" | "top";
 
 function DashboardSkeleton() {
   return (
@@ -209,6 +209,15 @@ function DashboardContent() {
     return true;
   });
 
+  // Apply sorting for Top Rated
+  if (filter === "top") {
+    filteredNotes.sort((a, b) => {
+      const scoreA = (voteData[a.id]?.up || 0) - (voteData[a.id]?.down || 0);
+      const scoreB = (voteData[b.id]?.up || 0) - (voteData[b.id]?.down || 0);
+      return scoreB - scoreA;
+    });
+  }
+
   if (loading) {
     return <DashboardSkeleton />;
   }
@@ -315,16 +324,17 @@ function DashboardContent() {
 
       <div className="flex flex-wrap items-center gap-3 mb-8">
         <div className="flex bg-card border border-muted/20 p-1 rounded-xl shadow-sm">
-          {(["all", "notes", "pdfs"] as FilterType[]).map((t) => (
+          {(["all", "notes", "pdfs", "top"] as FilterType[]).map((t) => (
             <button
               key={t}
               onClick={() => setFilter(t)}
-              className={`px-4 py-1.5 text-sm font-medium rounded-lg capitalize transition-all ${filter === t
+              className={`px-4 py-1.5 text-sm font-medium rounded-lg capitalize transition-all flex items-center gap-2 ${filter === t
                 ? "bg-muted/20 text-primary"
                 : "text-primary/60 hover:text-primary hover:bg-muted/5"
                 }`}
             >
-              {t} {t === 'all' ? `(${notes.length})` : t === 'notes' ? `(${noteCount})` : `(${pdfCount})`}
+              {t === "top" && <Trophy className="w-4 h-4" />}
+              {t} {t === 'all' ? `(${notes.length})` : t === 'notes' ? `(${noteCount})` : t === 'pdfs' ? `(${pdfCount})` : ''}
             </button>
           ))}
         </div>

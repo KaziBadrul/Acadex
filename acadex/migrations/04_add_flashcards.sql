@@ -2,11 +2,11 @@
 
 -- Add tables for flashcard decks and individual flashcards
 
-CREATE TABLE flashcard_decks (
+CREATE TABLE IF NOT EXISTS flashcard_decks (
     id SERIAL PRIMARY KEY,
     note_id INTEGER REFERENCES notes(id) ON DELETE CASCADE,
     title TEXT NOT NULL,
-    created_by TEXT REFERENCES profiles(id) ON DELETE SET NULL,
+    created_by UUID REFERENCES profiles(id) ON DELETE SET NULL,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 

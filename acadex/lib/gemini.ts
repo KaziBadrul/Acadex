@@ -15,15 +15,22 @@ export async function generateQAFromText(text: string): Promise<QAPair[]> {
     return [];
   }
 
-  // the generative language endpoint from Google AI Studio – you can keep
-  // the full URL in GEMINI_API_ENDPOINT or default to a known model
-  // Ensure endpoint is clean and append API key
-  let baseUrl = process.env.GEMINI_API_ENDPOINT || "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent";
-  // Force v1 instead of v1beta for model support
-  baseUrl = baseUrl.replace('/v1beta/', '/v1/');
-  // Remove any existing key if present in the endpoint string
-  baseUrl = baseUrl.split('?')[0];
-  const url = `${baseUrl}?key=${process.env.GEMINI_API_KEY}`;
+  // the generative language endpoint from Google AI Studio
+  // Try to use a very standard URL structure
+  const apiKey = process.env.GEMINI_API_KEY;
+  let url = "";
+
+  if (process.env.GEMINI_API_ENDPOINT) {
+    url = process.env.GEMINI_API_ENDPOINT;
+  } else {
+    // try gemini-1.5-flash-latest as it often has better alias support
+    url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent";
+  }
+
+  // Ensure the URL has the API key attached at the end
+  if (!url.includes("key=")) {
+    url = url.includes("?") ? `${url}&key=${apiKey}` : `${url}?key=${apiKey}`;
+  }
 
   const prompt = `Generate a JSON array of question/answer pairs from the following note text.
 The output MUST be a JSON array where each object has "q" (the question) and "a" (the answer) keys.
@@ -69,7 +76,21 @@ ${text}`;
     }
 
     try {
-      const parsed = JSON.parse(textOutput);
+      // Defensive parsing: LLMs sometimes wrap JSON in markdown code blocks
+      let cleanOutput = textOutput.trim();
+      if (cleanOutput.startsWith("```")) {
+        // Find the broad start and end of the JSON structure
+        const firstBracket = cleanOutput.indexOf("[");
+        const lastBracket = cleanOutput.lastIndexOf("]");
+        if (firstBracket !== -1 && lastBracket !== -1) {
+          cleanOutput = cleanOutput.substring(firstBracket, lastBracket + 1);
+        } else {
+          // Fallback simple regex if brackets aren't found
+          cleanOutput = cleanOutput.replace(/```(json)?/g, "").trim();
+        }
+      }
+
+      const parsed = JSON.parse(cleanOutput);
       if (Array.isArray(parsed)) {
         return parsed as QAPair[];
       }

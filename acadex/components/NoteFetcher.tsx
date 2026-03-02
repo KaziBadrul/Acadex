@@ -73,7 +73,7 @@ export default function NoteFetcher({ noteId }: NoteFetcherProps) {
     }
     // navigate to the server‑side generation page; that page will call the
     // same action and redirect once the deck has been created.
-    router.push(`/notes/${note.id}/generate`);
+    // router.push(`/notes/${note.id}/generate`);
   };
 
   useEffect(() => {
@@ -234,7 +234,7 @@ export default function NoteFetcher({ noteId }: NoteFetcherProps) {
           )}
 
           {/* generate/view buttons available to any logged-in user with access */}
-          {!deckId && note?.id != null && (
+          {/* {!deckId && note?.id != null && (
             <Link
               href={`/notes/${encodeURIComponent(String(note.id))}/generate`}
               onClick={(e) => {
@@ -255,7 +255,7 @@ export default function NoteFetcher({ noteId }: NoteFetcherProps) {
             >
               <BookOpen className="w-4 h-4" /> View Flashcards
             </Link>
-          )}
+          )} */}
         </div>
 
         {/* ===== CONTENT ===== */}

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Upload, FileText, Sparkles, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { heuristicGenerate } from "@/lib/flashcards";
 import FlashcardStack, { Flashcard } from "./FlashcardStack";
 
 export default function SnapGenerator() {
@@ -12,66 +13,22 @@ export default function SnapGenerator() {
     const [cards, setCards] = useState<Flashcard[]>([]);
     const [inputType, setInputType] = useState<"text" | "image">("text");
 
-    // --- Generation Logic (Heuristic Cloze Deletion) ---
-    const generateCards = (sourceText: string) => {
-        const sentences = sourceText.match(/[^.!?]+[.!?]+/g) || [sourceText];
-        const newCards: Flashcard[] = [];
-
-        sentences.forEach((sentence, idx) => {
-            const clean = sentence.trim();
-            if (clean.length < 10) return; // Skip too short
-
-            // Strategy 1: Find definitions (contains " is ", " are ", " means ")
-            const defMatch = clean.match(/^(.*?) (is|are|means|refers to) (.*)$/i);
-
-            if (defMatch) {
-                // Obscure the subject (Term)
-                const term = defMatch[1];
-                const body = defMatch[2] + " " + defMatch[3];
-                // Create card
-                if (term.split(" ").length < 5) { // Ensure term isn't a whole long clause
-                    newCards.push({
-                        id: `gen-${idx}`,
-                        front: `___ ${body}`,
-                        back: term
-                    });
-                    return;
-                }
-            }
-
-            // Strategy 2: Keyword Blanking (Longest word > 5 chars)
-            const words = clean.split(" ");
-            const candidates = words.filter(w => w.length > 5 && !/^(this|that|there|which|because|although)/i.test(w));
-
-            if (candidates.length > 0) {
-                // Pick random candidate
-                const wordToRemove = candidates[Math.floor(Math.random() * candidates.length)];
-                // Replace ONLY that instance to avoid confusion, using simple replace
-                const q = clean.replace(wordToRemove, "[_____]");
-                newCards.push({
-                    id: `gen-${idx}-cloze`,
-                    front: q,
-                    back: wordToRemove.replace(/[.,!?]/g, "") // clean punctuation
-                });
-            }
-        });
-
-        return newCards.length > 0 ? newCards : [
-            { id: 'err', front: 'Could not generate cards.', back: 'Try simpler text.' }
-        ];
-    };
-
     const handleGenerate = async () => {
         if (!text.trim()) return;
         setIsProcessing(true);
 
         // Simulate thinking delay for effect
         setTimeout(() => {
-            const generated = generateCards(text);
+            const qaPairs = heuristicGenerate(text);
+            const generated: Flashcard[] = qaPairs.map((p, idx) => ({
+                id: `gen-${idx}`,
+                front: p.q,
+                back: p.a,
+            }));
             setCards(generated);
             setMode("review");
             setIsProcessing(false);
-        }, 1500);
+        }, 1200);
     };
 
     const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
