@@ -11,6 +11,7 @@ import {
   FileText, Plus, Upload, BookOpen, Clock, Users, Database,
   HelpCircle, Settings, Bell, Search, Filter, Trash2, Shield
 } from "lucide-react";
+import BrandLoader from "@/components/BrandLoader";
 
 interface Note {
   id: number;
@@ -217,6 +218,7 @@ function DashboardContent() {
 
   return (
     <div className="w-full pb-10">
+      <BrandLoader />
       {/* Header */}
       <div className="flex justify-between items-center mb-8 border-b border-muted/20 pb-4">
         <h1 className="text-3xl font-bold text-primary tracking-tight">
