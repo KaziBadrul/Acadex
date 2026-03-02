@@ -76,7 +76,6 @@ function DashboardContent() {
 
   const [myGroupIds, setMyGroupIds] = useState<string[]>([]);
 
-  /* Vote State */
   const [voteData, setVoteData] = useState<Record<number, { up: number; down: number; userVote: 1 | -1 | null }>>({});
 
   useEffect(() => {
@@ -219,7 +218,6 @@ function DashboardContent() {
   return (
     <div className="w-full pb-10">
       <BrandLoader />
-      {/* Header */}
       <div className="flex justify-between items-center mb-8 border-b border-muted/20 pb-4">
         <h1 className="text-3xl font-bold text-primary tracking-tight">
           Welcome back, {user.username}
@@ -232,10 +230,8 @@ function DashboardContent() {
         </Link>
       </div>
 
-      {/* --- Quick Stats and Actions --- */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
 
-        {/* Notes Stats Widget */}
         <div className="bg-card p-6 rounded-2xl shadow-subtle border border-muted/20 flex flex-col justify-between group">
           <div>
             <div className="flex items-center gap-2 mb-2 text-primary/60">
@@ -262,7 +258,6 @@ function DashboardContent() {
           </div>
         </div>
 
-        {/* Quick Actions Widget */}
         <div className="bg-card p-6 rounded-2xl shadow-subtle border border-muted/20 flex flex-col">
           <p className="text-sm font-medium text-primary/60 mb-4 pb-2 border-b border-muted/10">Quick Actions</p>
           <div className="grid grid-cols-2 gap-3 flex-1 text-sm font-medium">
@@ -281,7 +276,6 @@ function DashboardContent() {
           </div>
         </div>
 
-        {/* Profile Card */}
         <div className="bg-card p-6 rounded-2xl shadow-subtle border border-muted/20 flex flex-col items-center justify-center text-center">
           <div className="w-16 h-16 bg-accent rounded-full flex items-center justify-center mb-4 text-primary text-2xl font-bold">
             {user.username.charAt(0).toUpperCase()}
@@ -293,7 +287,6 @@ function DashboardContent() {
         </div>
       </div>
 
-      {/* --- Notes Section Header --- */}
       <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-semibold text-primary">
@@ -309,7 +302,6 @@ function DashboardContent() {
           )}
         </div>
 
-        {/* Search */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary/40" />
           <input
@@ -321,9 +313,7 @@ function DashboardContent() {
         </div>
       </div>
 
-      {/* --- Filters Area --- */}
       <div className="flex flex-wrap items-center gap-3 mb-8">
-        {/* Type Filters */}
         <div className="flex bg-card border border-muted/20 p-1 rounded-xl shadow-sm">
           {(["all", "notes", "pdfs"] as FilterType[]).map((t) => (
             <button
@@ -339,7 +329,6 @@ function DashboardContent() {
           ))}
         </div>
 
-        {/* Visibility Pill */}
         <div className="flex items-center gap-2 bg-card border border-muted/20 px-3 py-1.5 rounded-xl shadow-sm">
           <Filter className="w-4 h-4 text-primary/40" />
           <select
@@ -354,7 +343,6 @@ function DashboardContent() {
           </select>
         </div>
 
-        {/* Group Pill */}
         {userJoinedGroups.length > 0 && (
           <div className="flex items-center gap-2 bg-card border border-muted/20 px-3 py-1.5 rounded-xl shadow-sm">
             <Users className="w-4 h-4 text-primary/40" />
@@ -389,7 +377,6 @@ function DashboardContent() {
         )}
       </div>
 
-      {/* --- Notes Grid List --- */}
       {filteredNotes.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredNotes.map((note) => {
@@ -423,7 +410,6 @@ function DashboardContent() {
                     )}
                   </div>
 
-                  {/* Metadata Chips */}
                   <div className="flex flex-wrap items-center gap-2 mt-auto">
                     {isPdf && (
                       <span className="px-2.5 py-1 text-xs font-semibold bg-red-50 text-red-600 rounded-md border border-red-100">
