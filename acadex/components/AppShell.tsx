@@ -11,6 +11,8 @@ import {
     Settings,
     Menu,
     X,
+    Sparkles,
+    Network,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -20,6 +22,8 @@ const SIDEBAR_ITEMS = [
     { name: "Upload", href: "/notes/upload", icon: Upload },
     { name: "Groups", href: "/groups", icon: Users },
     { name: "Schedule", href: "/schedule", icon: Calendar },
+    { name: "Zen", href: "/zen", icon: Sparkles },
+    { name: "Nexus", href: "/nexus", icon: Network },
     { name: "Settings", href: "/settings", icon: Settings },
 ];
 

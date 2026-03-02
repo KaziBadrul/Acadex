@@ -325,3 +325,43 @@ export async function getGroupMessage(messageId: number) {
         profiles: { username: profile?.username || "Unknown user" }
     };
 }
+
+export async function fetchAllGroups() {
+    const adminClient = await createAdminClient();
+
+    // 1. Fetch all groups
+    const { data: groups, error: groupsError } = await adminClient
+        .from("groups")
+        .select("id, name, invite_code, creator_id, created_at, password")
+        .order("created_at", { ascending: false });
+
+    if (groupsError || !groups) {
+        console.error("Fetch All Groups Error:", groupsError);
+        return [];
+    }
+
+    // 2. Fetch member counts for all groups
+    const { data: memberCounts, error: countError } = await adminClient
+        .from("group_members")
+        .select("group_id");
+
+    if (countError) {
+        console.error("Fetch Member Counts Error:", countError);
+    }
+
+    const counts: Record<string, number> = {};
+    (memberCounts || []).forEach((m: any) => {
+        counts[m.group_id] = (counts[m.group_id] || 0) + 1;
+    });
+
+    // 3. Map to safe object (don't send passwords)
+    return groups.map((g: any) => ({
+        id: g.id,
+        name: g.name,
+        invite_code: g.invite_code,
+        creator_id: g.creator_id,
+        created_at: g.created_at,
+        member_count: counts[g.id] || 0,
+        hasPassword: !!g.password,
+    }));
+}
