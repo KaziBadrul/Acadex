@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
-import { getGroupMessages, sendGroupMessage } from "@/app/groups/actions";
+import { getGroupMessages, sendGroupMessage, getGroupMessage } from "@/app/groups/actions";
 import { MessageSquare, Send } from "lucide-react";
 
 interface Message {
@@ -51,7 +51,6 @@ export default function GroupChat({ groupId, currentUserId }: GroupChatProps) {
                     filter: `group_id=eq.${groupId}`,
                 },
                 async (payload) => {
-                    const { getGroupMessage } = await import("@/app/groups/actions");
                     const fullMessage = await getGroupMessage(payload.new.id);
 
                     if (fullMessage) {

@@ -9,33 +9,32 @@ import { TextAlign } from "@tiptap/extension-text-align";
 import { useEffect } from "react";
 import Image from "@tiptap/extension-image";
 
+const IconButton = ({
+  onClick,
+  isActive,
+  children,
+  title,
+}: {
+  onClick: () => void;
+  isActive?: boolean;
+  children: React.ReactNode;
+  title?: string;
+}) => (
+  <button
+    type="button"
+    onClick={onClick}
+    title={title}
+    className={`p-1.5 rounded transition-colors ${isActive
+        ? "bg-white text-black shadow-sm"
+        : "text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"
+      }`}
+  >
+    {children}
+  </button>
+);
+
 const Toolbar = ({ editor }: { editor: any }) => {
   if (!editor) return null;
-
-  const IconButton = ({
-    onClick,
-    isActive,
-    children,
-    title,
-  }: {
-    onClick: () => void;
-    isActive?: boolean;
-    children: React.ReactNode;
-    title?: string;
-  }) => (
-    <button
-      type="button"
-      onClick={onClick}
-      title={title}
-      className={`p-1.5 rounded transition-colors ${
-        isActive
-          ? "bg-white text-black shadow-sm"
-          : "text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"
-      }`}
-    >
-      {children}
-    </button>
-  );
 
   return (
     <div className="flex flex-wrap items-center gap-1 p-2 bg-zinc-950 border border-zinc-800 rounded-t-2xl sticky top-0 z-10 select-none">

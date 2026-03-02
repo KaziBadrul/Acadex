@@ -6,6 +6,7 @@ import { createClient } from "@/utils/supabase/client";
 import Link from "next/link";
 import GroupChat from "@/components/GroupChat";
 import { ArrowLeft, Users, Shield, Copy, UserMinus, Key } from "lucide-react";
+import { getGroupPageData } from "@/app/groups/actions";
 
 interface Group {
     id: string;
@@ -62,14 +63,7 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
     const router = useRouter();
     const supabase = createClient();
 
-    useEffect(() => {
-        if (groupIdString) {
-            fetchData();
-        }
-    }, [groupIdString]);
-
     const fetchData = async () => {
-        const { getGroupPageData } = await import("@/app/groups/actions");
         const res = await getGroupPageData(groupIdString);
 
         if (res.error) {
@@ -88,6 +82,12 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
 
         setLoading(false);
     };
+
+    useEffect(() => {
+        if (groupIdString) {
+            fetchData();
+        }
+    }, [groupIdString]);
 
     const removeMember = async (memberId: number) => {
         if (!confirm("Are you sure you want to remove this member?")) return;
@@ -117,7 +117,7 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
             <div className="flex flex-col items-center justify-center p-16 text-center bg-white rounded-2xl border border-muted/20 mt-10">
                 <Users className="w-12 h-12 text-primary/40 mb-4" />
                 <h3 className="text-2xl font-semibold text-primary mb-2">Group not found</h3>
-                <p className="text-primary/60 mb-8 max-w-sm">The group you're looking for doesn't exist or you don't have access to it.</p>
+                <p className="text-primary/60 mb-8 max-w-sm">The group you&apos;re looking for doesn&apos;t exist or you don&apos;t have access to it.</p>
                 <Link
                     href="/groups"
                     className="flex items-center gap-2 px-6 py-3 bg-primary text-white font-medium rounded-xl hover:bg-primary/90 transition-all"

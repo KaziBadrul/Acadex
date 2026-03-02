@@ -489,7 +489,7 @@ function DashboardContent() {
           </div>
           <h3 className="text-xl font-semibold text-primary mb-2">No notes found</h3>
           <p className="text-primary/60 max-w-sm mb-6">
-            We couldn't find any notes matching your current filters and search.
+            We couldn&apos;t find any notes matching your current filters and search.
           </p>
           <div className="flex gap-4">
             <button

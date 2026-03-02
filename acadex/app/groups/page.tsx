@@ -36,16 +36,16 @@ export default function GroupsPage() {
 
   const router = useRouter();
 
-  useEffect(() => {
-    loadGroups();
-  }, []);
-
   async function loadGroups() {
     setLoading(true);
     const data = await fetchUserGroups();
     setGroups(data || []);
     setLoading(false);
   }
+
+  useEffect(() => {
+    loadGroups();
+  }, []);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -188,7 +188,7 @@ export default function GroupsPage() {
             </div>
             <h3 className="text-lg font-semibold text-primary mb-2">No groups yet</h3>
             <p className="text-primary/60 text-sm max-w-sm">
-              You haven't joined any groups. Create a new group above or enter an invite code to join an existing one.
+              You haven&apos;t joined any groups. Create a new group above or enter an invite code to join an existing one.
             </p>
           </div>
         ) : (
@@ -224,8 +224,8 @@ export default function GroupsPage() {
                         <span
                           key={m.user_id}
                           className={`flex items-center gap-1 text-[11px] px-2 py-1 rounded-md border font-medium ${m.role === "admin"
-                              ? "border-amber-200 bg-amber-50 text-amber-700"
-                              : "border-muted/20 bg-muted/5 text-primary/70"
+                            ? "border-amber-200 bg-amber-50 text-amber-700"
+                            : "border-muted/20 bg-muted/5 text-primary/70"
                             }`}
                           title={m.role === "admin" ? "Admin" : "Member"}
                         >

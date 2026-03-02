@@ -29,11 +29,6 @@ export default function NoteRequestsPage() {
     const supabase = createClient();
     const router = useRouter();
 
-    useEffect(() => {
-        fetchRequests();
-        checkUser();
-    }, []);
-
     const checkUser = async () => {
         const {
             data: { user },
@@ -58,6 +53,11 @@ export default function NoteRequestsPage() {
         }
         setLoading(false);
     };
+
+    useEffect(() => {
+        fetchRequests();
+        checkUser();
+    }, [supabase]);
 
     const deleteRequest = async (id: number) => {
         console.log("Attempting to delete request:", id);
