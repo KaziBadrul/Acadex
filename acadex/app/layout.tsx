@@ -4,6 +4,7 @@ import "./globals.css";
 import ThemeProvider from "@/components/theme-provider";
 import ReminderNotificationProvider from "@/components/ReminderNotificationProvider";
 import AppShell from "@/components/AppShell";
+import PwaRegistration from "@/components/PwaRegistration";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -13,6 +14,14 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "Acadex Workspace",
   description: "Minimal premium workspace for notes and scheduling.",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Acadex",
+  },
+  formatDetection: {
+    telephone: false,
+  },
 };
 
 export default function RootLayout({
@@ -37,13 +46,14 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={`${inter.variable} font-sans antialiased`}>
+      <body className={`${inter.variable} font-sans antialiased text-[#1E2A38]`}>
         <ThemeProvider>
           <ReminderNotificationProvider>
             <AppShell>
               {children}
             </AppShell>
           </ReminderNotificationProvider>
+          <PwaRegistration />
         </ThemeProvider>
       </body>
     </html>
