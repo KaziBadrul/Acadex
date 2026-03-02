@@ -180,16 +180,21 @@ export default function SettingsPage() {
                     </div>
                 </div>
 
-                {/* Account Actions */}
-                <div className="bg-card rounded-2xl shadow-subtle border border-red-100 overflow-hidden">
+                {/* Session Management */}
+                <div className="bg-card rounded-2xl shadow-subtle border border-muted/20 overflow-hidden divide-y divide-muted/10">
+                    <div className="px-6 py-5 bg-muted/5 flex items-center gap-2 text-primary font-bold">
+                        <LogOut className="w-5 h-5 text-primary/40" />
+                        <h2>Session Management</h2>
+                    </div>
+
                     <div className="p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
                         <div>
-                            <h2 className="font-bold text-red-600 text-[15px]">Danger Zone</h2>
-                            <p className="text-sm text-red-600/70 mt-0.5">Sign out of your active session on this device.</p>
+                            <p className="font-bold text-primary text-[15px]">Account Session</p>
+                            <p className="text-sm text-primary/50 mt-0.5">Sign out of your active session on this device.</p>
                         </div>
                         <button
                             onClick={handleLogout}
-                            className="w-full sm:w-auto px-6 py-2.5 bg-red-50 text-red-600 font-bold tracking-wide rounded-xl border border-red-200 hover:bg-red-100 transition-all flex items-center justify-center gap-2 shrink-0"
+                            className="w-full sm:w-auto px-8 py-2.5 bg-background border border-muted/30 text-primary font-bold rounded-xl hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition-all flex items-center justify-center gap-2 shrink-0 shadow-sm hover:shadow-md"
                         >
                             <LogOut className="w-4 h-4" /> Sign Out
                         </button>
