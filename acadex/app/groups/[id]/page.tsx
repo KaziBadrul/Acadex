@@ -5,10 +5,9 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import Link from "next/link";
 import GroupChat from "@/components/GroupChat";
+import { ArrowLeft, Users, Shield, Copy, UserMinus, Key } from "lucide-react";
 
 interface Group {
-    // ...
-    // ... (rest of imports and interfaces remain same until line 12)
     id: string;
     name: string;
     description: string;
@@ -25,6 +24,29 @@ interface Member {
     profiles: {
         username: string;
     };
+}
+
+function GroupDetailSkeleton() {
+    return (
+        <div className="w-full space-y-6 animate-pulse">
+            <div className="flex justify-between items-center mb-8 border-b border-muted/20 pb-4">
+                <div className="space-y-2">
+                    <div className="h-10 w-64 bg-muted/20 rounded-xl"></div>
+                    <div className="h-4 w-40 bg-muted/20 rounded-md"></div>
+                </div>
+                <div className="h-10 w-24 bg-muted/20 rounded-xl"></div>
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="lg:col-span-1 space-y-6">
+                    <div className="h-64 bg-white rounded-2xl border border-muted/10 p-6"></div>
+                    <div className="h-32 bg-white rounded-2xl border border-muted/10 p-6"></div>
+                </div>
+                <div className="lg:col-span-2">
+                    <div className="h-[500px] bg-white rounded-2xl border border-muted/10 p-6"></div>
+                </div>
+            </div>
+        </div>
+    );
 }
 
 export default function GroupDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -83,119 +105,147 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
     };
 
     if (loading) {
-        return <div className="p-12 text-center text-lg">Loading Group...</div>;
+        return (
+            <div className="w-full pb-10">
+                <GroupDetailSkeleton />
+            </div>
+        );
     }
 
     if (!group) {
         return (
-            <div className="p-12 text-center">
-                <p className="text-xl text-gray-600 mb-4">Group not found</p>
+            <div className="flex flex-col items-center justify-center p-16 text-center bg-white rounded-2xl border border-muted/20 mt-10">
+                <Users className="w-12 h-12 text-primary/40 mb-4" />
+                <h3 className="text-2xl font-semibold text-primary mb-2">Group not found</h3>
+                <p className="text-primary/60 mb-8 max-w-sm">The group you're looking for doesn't exist or you don't have access to it.</p>
                 <Link
                     href="/groups"
-                    className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                    className="flex items-center gap-2 px-6 py-3 bg-primary text-white font-medium rounded-xl hover:bg-primary/90 transition-all"
                 >
-                    Back to Groups
+                    <ArrowLeft className="w-5 h-5" /> Back to Groups
                 </Link>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 py-10">
-            <div className="max-w-6xl mx-auto px-4">
-                {/* Header */}
-                <div className="flex justify-between items-center mb-8 border-b pb-4">
-                    <div>
-                        <h1 className="text-4xl font-bold text-gray-900">{group.name}</h1>
-                        {(group as any).description && (
-                            <p className="text-gray-600 mt-2">{(group as any).description}</p>
-                        )}
-                    </div>
-                    <Link
-                        href="/groups"
-                        className="py-2 px-4 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 transition"
-                    >
-                        Back to Groups
-                    </Link>
+        <div className="w-full pb-10">
+            <div className="flex flex-col md:flex-row justify-between md:items-center mb-8 border-b border-muted/20 pb-4 gap-4">
+                <div>
+                    <h1 className="text-3xl font-bold text-primary tracking-tight">{group.name}</h1>
+                    {group.description && (
+                        <p className="text-primary/60 mt-2 text-sm max-w-2xl">{group.description}</p>
+                    )}
                 </div>
+                <Link
+                    href="/groups"
+                    className="self-start flex items-center gap-2 py-2 px-4 bg-muted/10 text-primary font-medium rounded-xl hover:bg-muted/20 transition-all"
+                >
+                    <ArrowLeft className="w-4 h-4" /> Groups
+                </Link>
+            </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Left Column: Info & Members */}
-                    <div className="lg:col-span-1 space-y-6">
-                        {/* Members Section */}
-                        <div className="bg-white p-6 rounded-xl shadow-lg">
-                            <h2 className="text-2xl font-bold text-gray-800 mb-4">
-                                Members ({members.length})
-                            </h2>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Left Column: Info & Members */}
+                <div className="lg:col-span-1 space-y-6">
 
-                            <div className="space-y-3">
-                                {members.map((member) => (
-                                    <div
-                                        key={member.id}
-                                        className="flex justify-between items-center p-3 bg-gray-50 rounded-lg"
-                                    >
-                                        <div>
-                                            <p className="font-semibold text-gray-900">
-                                                {member.profiles?.username || "Unknown User"}
-                                            </p>
-                                            <p className="text-[10px] text-gray-500">
-                                                Joined {new Date(member.joined_at).toLocaleDateString()}
-                                            </p>
-                                        </div>
-
-                                        <div className="flex items-center gap-2">
-                                            <span
-                                                className={`px-2 py-0.5 text-[10px] font-semibold rounded ${member.role === "admin"
-                                                    ? "bg-blue-100 text-blue-800"
-                                                    : "bg-gray-100 text-gray-800"
-                                                    }`}
-                                            >
-                                                {member.role.toUpperCase()}
-                                            </span>
-
-                                            {userRole === "admin" && member.user_id !== user?.id && (
-                                                <button
-                                                    onClick={() => removeMember(member.id)}
-                                                    className="p-1 bg-red-500 text-white rounded hover:bg-red-600"
-                                                >
-                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-3 h-3">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                                                    </svg>
-                                                </button>
-                                            )}
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
+                    {/* Group Info Widget */}
+                    <div className="bg-white p-6 rounded-2xl shadow-subtle border border-muted/20">
+                        <div className="flex items-center gap-2 mb-4 text-primary">
+                            <Key className="w-5 h-5" />
+                            <h4 className="font-bold tracking-tight">Access Credentials</h4>
                         </div>
-
-                        {/* Group Actions / Settings (Small Card) */}
-                        <div className="bg-white p-4 rounded-xl shadow border border-gray-100">
-                            <h4 className="font-bold text-gray-700 mb-2">Invite Code</h4>
-                            <div className="flex items-center justify-between bg-blue-50 p-2 rounded border border-blue-100">
-                                <code className="text-blue-800 font-mono font-bold tracking-wider">{group.invite_code}</code>
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between bg-accent/20 p-3 rounded-xl border border-accent/30">
+                                <div>
+                                    <p className="text-[10px] font-bold uppercase text-primary/50 tracking-wider mb-1">Invite Code</p>
+                                    <code className="text-primary font-mono font-bold text-lg leading-none">{group.invite_code}</code>
+                                </div>
                                 <button
                                     onClick={() => {
                                         navigator.clipboard.writeText(group.invite_code);
                                         alert("Invite code copied!");
                                     }}
-                                    className="text-blue-600 text-xs hover:underline"
+                                    className="p-2 text-primary/60 hover:text-primary hover:bg-white rounded-lg transition-all"
+                                    title="Copy Invite Code"
                                 >
-                                    Copy
+                                    <Copy className="w-4 h-4" />
                                 </button>
                             </div>
-                            <p className="text-[10px] text-gray-500 mt-2">Share this code with classmates to join.</p>
+                            <p className="text-xs text-primary/50">Share this code with classmates so they can join this study group.</p>
                         </div>
                     </div>
 
-                    {/* Right Column: Virtual Study Room (Messenger) */}
-                    <div className="lg:col-span-2">
-                        {user && (
-                            <GroupChat
-                                groupId={groupIdString}
-                                currentUserId={user.id}
-                            />
-                        )}
+                    {/* Members Section */}
+                    <div className="bg-white p-6 rounded-2xl shadow-subtle border border-muted/20">
+                        <div className="flex items-center justify-between mb-6">
+                            <h2 className="text-xl font-bold text-primary tracking-tight flex items-center gap-2">
+                                <Users className="w-5 h-5" /> Members
+                            </h2>
+                            <span className="text-xs font-bold bg-muted/10 text-primary px-2.5 py-1 rounded-full">{members.length}</span>
+                        </div>
+
+                        <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                            {members.map((member) => (
+                                <div
+                                    key={member.id}
+                                    className="flex justify-between items-center p-3.5 bg-background/50 border border-muted/10 rounded-xl hover:border-muted/30 transition-colors group"
+                                >
+                                    <div className="min-w-0 pr-4">
+                                        <p className="font-semibold text-primary truncate">
+                                            {Array.isArray(member.profiles)
+                                                ? (member.profiles[0]?.username || "Unknown User")
+                                                : (member.profiles?.username || "Unknown User")}
+                                        </p>
+                                        <p className="text-[10px] text-primary/40 mt-0.5">
+                                            Joined {new Date(member.joined_at).toLocaleDateString()}
+                                        </p>
+                                    </div>
+
+                                    <div className="flex items-center gap-2 shrink-0">
+                                        <span
+                                            className={`flex items-center gap-1 px-2.5 py-1 text-[10px] font-semibold rounded-md ${member.role === "admin"
+                                                ? "bg-amber-50 text-amber-700 border border-amber-200"
+                                                : "bg-muted/10 text-primary/70 border border-muted/20"
+                                                }`}
+                                        >
+                                            {member.role === "admin" && <Shield className="w-3 h-3" />}
+                                            {member.role.charAt(0).toUpperCase() + member.role.slice(1)}
+                                        </span>
+
+                                        {userRole === "admin" && member.user_id !== user?.id && (
+                                            <button
+                                                onClick={() => removeMember(member.id)}
+                                                className="p-1.5 min-w-[28px] text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+                                                title="Remove Member"
+                                            >
+                                                <UserMinus className="w-4 h-4" />
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Right Column: Virtual Study Room (Messenger) */}
+                <div className="lg:col-span-2">
+                    <div className="bg-white rounded-2xl shadow-subtle border border-muted/20 h-[600px] overflow-hidden flex flex-col">
+                        <div className="p-4 border-b border-muted/20 bg-muted/5">
+                            <h3 className="font-bold text-primary">virtual study room</h3>
+                            <p className="text-xs text-primary/50">Discuss notes and topics with {group.name}</p>
+                        </div>
+                        <div className="flex-1 bg-background relative min-h-0">
+                            {user ? (
+                                <GroupChat
+                                    groupId={groupIdString}
+                                    currentUserId={user.id}
+                                />
+                            ) : (
+                                <div className="absolute inset-0 flex items-center justify-center text-primary/40 text-sm">Loading Chat...</div>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>

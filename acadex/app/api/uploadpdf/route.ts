@@ -38,18 +38,22 @@ export async function POST(req: Request) {
       .from("files")
       .getPublicUrl(filePath);
 
-    const { error: insertError } = await supabase.from("notes").insert({
-      title,
-      content: "",
-      version: 1,
-      author_id,
-      course,
-      topic,
-      visibility,
-      group_id: visibility === "group" ? (group_id || null) : null,
-      type: "pdf",
-      file_url: publicUrl.publicUrl,
-    });
+    const { data: note, error: insertError } = await supabase
+      .from("notes")
+      .insert({
+        title,
+        content: "",
+        version: 1,
+        author_id,
+        course,
+        topic,
+        visibility,
+        group_id: visibility === "group" ? (group_id || null) : null,
+        type: "pdf",
+        file_url: publicUrl.publicUrl,
+      })
+      .select("id")
+      .single();
 
     if (insertError) {
       return NextResponse.json({ error: insertError.message }, { status: 500 });
@@ -57,6 +61,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       success: true,
+      id: note.id,
       url: publicUrl.publicUrl,
     });
   } catch (err) {

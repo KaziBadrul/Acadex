@@ -39,3 +39,18 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# dist output
+dist/
+
+# build logs
+build-log.txt
+
+# env example exception
+!.env.example
+
+# turbopack / turbo
+.turbo/
+
+# OS files
+Thumbs.db

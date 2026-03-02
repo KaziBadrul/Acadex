@@ -105,7 +105,7 @@ export async function fetchUserGroups() {
         .eq("user_id", user.id);
 
     if (!myMemberships || myMemberships.length === 0) return [];
-    const groupIds = myMemberships.map(m => m.group_id);
+    const groupIds = myMemberships.map((m: { group_id: string }) => m.group_id);
 
     // 2. Fetch those groups (Bypassing RLS)
     const { data: groups, error: groupsError } = await adminClient
@@ -130,23 +130,23 @@ export async function fetchUserGroups() {
     }
 
     // 4. Fetch profiles for all member user_ids
-    const userIds = Array.from(new Set(allMembers.map(m => m.user_id)));
+    const userIds = Array.from(new Set(allMembers.map((m: { user_id: string }) => m.user_id)));
     const { data: profiles } = await adminClient
         .from("profiles")
         .select("id, username")
         .in("id", userIds);
 
-    const profileMap = (profiles || []).reduce((acc: any, p) => {
+    const profileMap = (profiles || []).reduce((acc: any, p: { id: string; username: string | null }) => {
         acc[p.id] = p.username;
         return acc;
     }, {});
 
     // 5. Stitch it together
-    return groups.map(g => ({
+    return groups.map((g: any) => ({
         ...g,
         group_members: allMembers
-            .filter(m => m.group_id === g.id)
-            .map(m => ({
+            .filter((m: any) => m.group_id === g.id)
+            .map((m: any) => ({
                 ...m,
                 profiles: { username: profileMap[m.user_id] || "Unknown" }
             }))
@@ -166,20 +166,23 @@ export async function getGroupById(groupId: string) {
         return null;
     }
 
-    // Normalize property names (database might have created_by)
+    // Normalize property names (database might have creator_id or created_by)
     return {
         ...data,
-        creator_id: data.creator_id || data.created_by
+        name: data.name,
+        description: data.description,
+        invite_code: data.invite_code,
+        creator_id: data.creator_id || data.created_by,
+        created_at: data.created_at
     };
 }
 
 export async function getGroupMessages(groupId: string) {
-    const { data: messages, error } = await supabaseServer
+    const adminClient = await createAdminClient();
+    // 1. Fetch messages
+    const { data: messages, error } = await adminClient
         .from("group_messages")
-        .select(`
-            *,
-            profiles(username)
-        `)
+        .select("*")
         .eq("group_id", groupId)
         .order("created_at", { ascending: true });
 
@@ -188,32 +191,35 @@ export async function getGroupMessages(groupId: string) {
         return [];
     }
 
-    return messages;
+    if (!messages || messages.length === 0) return [];
+
+    // 2. Fetch profiles
+    const userIds = Array.from(new Set(messages.map(m => m.user_id)));
+    const { data: profiles } = await adminClient
+        .from("profiles")
+        .select("id, username")
+        .in("id", userIds);
+
+    const profileMap = (profiles || []).reduce((acc: any, p: any) => {
+        acc[p.id] = p.username;
+        return acc;
+    }, {});
+
+    // 3. Stitch
+    return messages.map(msg => ({
+        ...msg,
+        profiles: { username: profileMap[msg.user_id] || "Unknown user" }
+    }));
 }
 
 export async function sendGroupMessage(groupId: string, content: string) {
-    const cookieStore = await cookies();
-    const supabaseAuth = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-            cookies: {
-                getAll() { return cookieStore.getAll(); },
-                setAll(cookiesToSet) {
-                    try {
-                        cookiesToSet.forEach(({ name, value, options }) =>
-                            cookieStore.set(name, value, options)
-                        );
-                    } catch { }
-                },
-            },
-        }
-    );
+    const supabaseAuth = await createClient();
 
     const { data: { user } } = await supabaseAuth.auth.getUser();
     if (!user) return { error: "Not authenticated" };
 
-    const { error } = await supabaseServer
+    const adminClient = await createAdminClient();
+    const { error } = await adminClient
         .from("group_messages")
         .insert({
             group_id: groupId,
@@ -230,15 +236,11 @@ export async function sendGroupMessage(groupId: string, content: string) {
 }
 
 export async function getGroupMembers(groupId: string) {
-    const { data, error } = await supabaseServer
+    const adminClient = await createAdminClient();
+    // 1. Fetch memberships
+    const { data: members, error } = await adminClient
         .from("group_members")
-        .select(`
-            id,
-            user_id,
-            role,
-            joined_at,
-            profiles:user_id(username)
-        `)
+        .select("id, user_id, role, joined_at")
         .eq("group_id", groupId);
 
     if (error) {
@@ -246,27 +248,29 @@ export async function getGroupMembers(groupId: string) {
         return [];
     }
 
-    return data;
+    if (!members || members.length === 0) return [];
+
+    // 2. Fetch profiles
+    const userIds = Array.from(new Set(members.map(m => m.user_id)));
+    const { data: profiles } = await adminClient
+        .from("profiles")
+        .select("id, username")
+        .in("id", userIds);
+
+    const profileMap = (profiles || []).reduce((acc: any, p: any) => {
+        acc[p.id] = p.username;
+        return acc;
+    }, {});
+
+    // 3. Stitch
+    return members.map(m => ({
+        ...m,
+        profiles: { username: profileMap[m.user_id] || "Unknown user" }
+    }));
 }
 
 export async function getGroupPageData(groupId: string) {
-    const cookieStore = await cookies();
-    const supabaseAuth = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-            cookies: {
-                getAll() { return cookieStore.getAll(); },
-                setAll(cookiesToSet) {
-                    try {
-                        cookiesToSet.forEach(({ name, value, options }) =>
-                            cookieStore.set(name, value, options)
-                        );
-                    } catch { }
-                },
-            },
-        }
-    );
+    const supabaseAuth = await createClient();
 
     const { data: { user } } = await supabaseAuth.auth.getUser();
     if (!user) return { error: "Not authenticated" };
@@ -295,19 +299,29 @@ export async function getGroupPageData(groupId: string) {
 }
 
 export async function getGroupMessage(messageId: number) {
-    const { data: message, error } = await supabaseServer
+    const adminClient = await createAdminClient();
+    // 1. Fetch message
+    const { data: message, error } = await adminClient
         .from("group_messages")
-        .select(`
-            *,
-            profiles(username)
-        `)
+        .select("*")
         .eq("id", messageId)
         .single();
 
-    if (error) {
+    if (error || !message) {
         console.error("Fetch Single Message Error:", error);
         return null;
     }
 
-    return message;
+    // 2. Fetch profile
+    const { data: profile } = await adminClient
+        .from("profiles")
+        .select("username")
+        .eq("id", message.user_id)
+        .single();
+
+    // 3. Stitch
+    return {
+        ...message,
+        profiles: { username: profile?.username || "Unknown user" }
+    };
 }

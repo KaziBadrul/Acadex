@@ -145,3 +145,28 @@ export async function updateNote(noteId: number, data: {
     revalidatePath("/dashboard");
     return { success: true };
 }
+
+export async function getNotes() {
+    const adminClient = await createAdminClient();
+    const { data: notes, error } = await adminClient
+        .from("notes")
+        .select(`
+            id,
+            title,
+            course,
+            topic,
+            created_at,
+            type,
+            author_id,
+            visibility,
+            profiles(username)
+        `)
+        .order("created_at", { ascending: false });
+
+    if (error) {
+        console.error("getNotes error:", error);
+        return { error: error.message };
+    }
+
+    return { notes };
+}

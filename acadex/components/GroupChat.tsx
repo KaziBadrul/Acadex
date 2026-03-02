@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { getGroupMessages, sendGroupMessage } from "@/app/groups/actions";
+import { MessageSquare, Send } from "lucide-react";
 
 interface Message {
     id: number;
@@ -26,15 +27,19 @@ export default function GroupChat({ groupId, currentUserId }: GroupChatProps) {
 
     useEffect(() => {
         async function loadMessages() {
-            const initialMessages = await getGroupMessages(groupId);
-            setMessages(initialMessages);
-            setLoading(false);
-            scrollToBottom();
+            try {
+                const initialMessages = await getGroupMessages(groupId);
+                setMessages(initialMessages);
+            } catch (error) {
+                console.error("Failed to load messages:", error);
+            } finally {
+                setLoading(false);
+                setTimeout(scrollToBottom, 100);
+            }
         }
 
         loadMessages();
 
-        // Subscribe to real-time changes
         const channel = supabase
             .channel(`group_chat_${groupId}`)
             .on(
@@ -46,17 +51,15 @@ export default function GroupChat({ groupId, currentUserId }: GroupChatProps) {
                     filter: `group_id=eq.${groupId}`,
                 },
                 async (payload) => {
-                    // Fetch message via server action to bypass RLS for profile info
                     const { getGroupMessage } = await import("@/app/groups/actions");
                     const fullMessage = await getGroupMessage(payload.new.id);
 
                     if (fullMessage) {
                         setMessages((prev) => {
-                            // Prevent duplicates
                             if (prev.find(m => m.id === fullMessage.id)) return prev;
                             return [...prev, fullMessage as Message];
                         });
-                        scrollToBottom();
+                        setTimeout(scrollToBottom, 100);
                     }
                 }
             )
@@ -91,51 +94,60 @@ export default function GroupChat({ groupId, currentUserId }: GroupChatProps) {
     };
 
     if (loading) {
-        return <div className="p-4 text-center text-gray-500">Loading Study Room...</div>;
+        return (
+            <div className="absolute inset-0 flex flex-col items-center justify-center p-10 bg-background/50 backdrop-blur-sm z-10">
+                <span className="w-8 h-8 border-4 border-muted/30 border-t-primary rounded-full animate-spin mb-4" />
+                <p className="font-medium text-primary/60 animate-pulse">Connecting to study room...</p>
+            </div>
+        );
     }
 
     return (
-        <div className="flex flex-col h-[600px] bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
-            {/* Header */}
-            <div className="p-4 bg-blue-600 text-white flex items-center justify-between">
-                <h3 className="font-bold flex items-center gap-2">
-                    <span>💬</span> Group Study Messenger
-                </h3>
-                <span className="text-xs bg-blue-500 px-2 py-1 rounded-full">Real-time</span>
-            </div>
+        <div className="flex flex-col absolute inset-0 bg-background rounded-b-2xl overflow-hidden">
+            {/* Header (Optional, if we want an inner header. The parent already provides one so we skip the big blue bar) */}
 
             {/* Message List */}
             <div
                 ref={scrollRef}
-                className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50"
+                className="flex-1 overflow-y-auto min-h-0 p-6 space-y-6 custom-scrollbar"
             >
                 {messages.length === 0 ? (
-                    <div className="h-full flex flex-col items-center justify-center text-gray-400 space-y-2">
-                        <span className="text-4xl">📚</span>
-                        <p>No messages yet. Start the discussion!</p>
+                    <div className="h-full flex flex-col items-center justify-center text-primary/40 space-y-4 max-w-sm mx-auto text-center">
+                        <div className="w-16 h-16 bg-muted/10 rounded-full flex items-center justify-center">
+                            <MessageSquare className="w-8 h-8 opacity-50" />
+                        </div>
+                        <p className="text-sm font-medium">No messages yet. Be the first to start the discussion!</p>
                     </div>
                 ) : (
-                    messages.map((msg) => {
+                    messages.map((msg, index) => {
                         const isMe = msg.user_id === currentUserId;
+                        const prevMsg = index > 0 ? messages[index - 1] : null;
+                        const showHeader = !prevMsg || prevMsg.user_id !== msg.user_id ||
+                            (new Date(msg.created_at).getTime() - new Date(prevMsg.created_at).getTime() > 5 * 60 * 1000); // 5 mins gap
+
                         return (
                             <div
                                 key={msg.id}
-                                className={`flex flex-col ${isMe ? "items-end" : "items-start"}`}
+                                className={`flex flex-col w-full ${isMe ? "items-end" : "items-start"} ${showHeader ? 'mt-6' : 'mt-1'}`}
                             >
-                                <div className="flex items-center gap-2 mb-1">
-                                    {!isMe && (
-                                        <span className="text-xs font-bold text-gray-600">
-                                            {msg.profiles?.username || (msg as any).profiles?.username || "Unknown user"}
+                                {showHeader && (
+                                    <div className={`flex items-baseline gap-2 mb-1.5 px-1 ${isMe ? "flex-row-reverse" : "flex-row"}`}>
+                                        {!isMe && (
+                                            <span className="text-xs font-bold text-primary/70">
+                                                {Array.isArray(msg.profiles)
+                                                    ? (msg.profiles[0]?.username || "Unknown user")
+                                                    : (msg.profiles?.username || "Unknown user")}
+                                            </span>
+                                        )}
+                                        <span className="text-[10px] font-medium text-primary/40">
+                                            {new Date(msg.created_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
                                         </span>
-                                    )}
-                                    <span className="text-[10px] text-gray-400">
-                                        {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                    </span>
-                                </div>
+                                    </div>
+                                )}
                                 <div
-                                    className={`max-w-[80%] rounded-2xl px-4 py-2 text-sm shadow-sm transition-all ${isMe
-                                        ? "bg-blue-600 text-white rounded-tr-none"
-                                        : "bg-white text-gray-800 border border-gray-200 rounded-tl-none"
+                                    className={`max-w-[75%] px-4 py-2.5 text-sm shadow-sm transition-all relative ${isMe
+                                        ? "bg-primary text-white rounded-2xl rounded-tr-sm"
+                                        : "bg-card text-primary border border-muted/20 rounded-2xl rounded-tl-sm"
                                         }`}
                                 >
                                     {msg.content}
@@ -147,21 +159,22 @@ export default function GroupChat({ groupId, currentUserId }: GroupChatProps) {
             </div>
 
             {/* Input Area */}
-            <form onSubmit={handleSendMessage} className="p-4 border-t bg-white flex gap-2">
-                <input
-                    type="text"
-                    value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
-                    placeholder="Type a message..."
-                    className="flex-1 px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-black"
-                />
+            <form onSubmit={handleSendMessage} className="p-4 bg-card border-t border-muted/20 flex gap-3 items-end shrink-0">
+                <div className="flex-1 relative">
+                    <input
+                        type="text"
+                        value={newMessage}
+                        onChange={(e) => setNewMessage(e.target.value)}
+                        placeholder="Type your message..."
+                        className="w-full px-4 py-3 bg-muted/5 border border-muted/20 rounded-xl focus:ring-2 focus:ring-accent focus:border-accent outline-none text-primary placeholder:text-muted transition-all"
+                    />
+                </div>
                 <button
                     type="submit"
-                    className="bg-blue-600 text-white p-2 rounded-xl hover:bg-blue-700 transition"
+                    disabled={!newMessage.trim()}
+                    className="bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:hover:bg-primary text-white p-3 rounded-xl shadow-sm transition-all flex items-center justify-center shrink-0 h-12 w-12"
                 >
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
-                    </svg>
+                    <Send className="w-5 h-5 ml-0.5" />
                 </button>
             </form>
         </div>
