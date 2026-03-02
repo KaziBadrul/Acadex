@@ -1,3 +1,5 @@
+"use client";
+
 import FlashcardStack from "./smart-snap/FlashcardStack";
 import { useRouter } from "next/navigation";
 import { Trash2, Loader2, ChevronLeft } from "lucide-react";

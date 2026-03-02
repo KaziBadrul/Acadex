@@ -74,7 +74,6 @@ function DashboardContent() {
   const groupFilter = searchParams.get("group");
   const supabase = createClient();
 
-  const [myGroupIds, setMyGroupIds] = useState<string[]>([]);
 
   const [voteData, setVoteData] = useState<Record<number, { up: number; down: number; userVote: 1 | -1 | null }>>({});
 
@@ -95,8 +94,7 @@ function DashboardContent() {
         .select("group_id")
         .eq("user_id", user.id);
 
-      const groupIds = memberships?.map((m: any) => m.group_id) || [];
-      setMyGroupIds(groupIds);
+      const groupIds = memberships?.map((m: { group_id: string }) => m.group_id) || [];
 
       const { data: groupNames } = await supabase
         .from("groups")
@@ -117,12 +115,12 @@ function DashboardContent() {
         .order("created_at", { ascending: false });
 
       if (!error && allNotes) {
-        const filtered = allNotes.filter((note: any) => {
+        const filtered = allNotes.filter((note: Note) => {
           let hasAccess = false;
           if (note.visibility === "public") hasAccess = true;
           else if (note.visibility === "private") hasAccess = note.author_id === user.id;
           else if (note.visibility === "group") {
-            hasAccess = groupIds.includes(note.group_id) || note.author_id === user.id;
+            hasAccess = (note.group_id != null && groupIds.includes(note.group_id)) || note.author_id === user.id;
           }
 
           if (!hasAccess) return false;
@@ -132,7 +130,7 @@ function DashboardContent() {
         });
         setNotes(filtered as Note[]);
 
-        const noteIds = filtered.map((n: any) => n.id);
+        const noteIds = (filtered as Note[]).map((n) => n.id);
         if (noteIds.length > 0) {
           const { data: votes } = await supabase
             .from("note_votes")
@@ -142,7 +140,7 @@ function DashboardContent() {
           if (votes) {
             const vData: Record<number, { up: number; down: number; userVote: 1 | -1 | null }> = {};
             noteIds.forEach((id) => { vData[id] = { up: 0, down: 0, userVote: null }; });
-            votes.forEach((v) => {
+            votes.forEach((v: { note_id: number; vote_type: number; user_id: string }) => {
               if (!vData[v.note_id]) return;
               if (v.vote_type === 1) vData[v.note_id].up++;
               else if (v.vote_type === -1) vData[v.note_id].down++;
@@ -161,7 +159,7 @@ function DashboardContent() {
           if (!commentError && commentCounts) {
             const cData: Record<number, number> = {};
             noteIds.forEach((id) => { cData[id] = 0; });
-            commentCounts.forEach((c) => {
+            commentCounts.forEach((c: { note_id: number }) => {
               if (cData[c.note_id] !== undefined) cData[c.note_id]++;
             });
 
