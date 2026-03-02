@@ -1,36 +1,11 @@
 "use server";
 
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
-import { supabaseServer } from "@/utils/supabase/server";
+import { createClient, createAdminClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 
 export async function voteNote(noteId: number, voteType: 1 | -1, path: string) {
     // 1. Get current user safely using cookies
-    const cookieStore = await cookies();
-    const supabaseAuth = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-            cookies: {
-                getAll() {
-                    return cookieStore.getAll();
-                },
-                setAll(cookiesToSet) {
-                    // We are in a server action, this is fine
-                    try {
-                        cookiesToSet.forEach(({ name, value, options }) =>
-                            cookieStore.set(name, value, options)
-                        )
-                    } catch {
-                        // The `setAll` method was called from a Server Component.
-                        // This can be ignored if you have middleware refreshing
-                        // user sessions.
-                    }
-                },
-            },
-        }
-    );
+    const supabaseAuth = await createClient();
 
     const {
         data: { user },
@@ -40,9 +15,10 @@ export async function voteNote(noteId: number, voteType: 1 | -1, path: string) {
         return { error: "User not authenticated" };
     }
 
+    const adminClient = await createAdminClient();
     // 2. Perform DB operations using Admin Client (Bypass RLS)
     // Check if user has already voted
-    const { data: existingVote, error: fetchError } = await supabaseServer
+    const { data: existingVote, error: fetchError } = await adminClient
         .from("note_votes")
         .select("*")
         .eq("user_id", user.id)
@@ -57,7 +33,7 @@ export async function voteNote(noteId: number, voteType: 1 | -1, path: string) {
     if (existingVote) {
         if (existingVote.vote_type === voteType) {
             // Toggle off (remove vote)
-            const { error: deleteError } = await supabaseServer
+            const { error: deleteError } = await adminClient
                 .from("note_votes")
                 .delete()
                 .eq("id", existingVote.id);
@@ -68,7 +44,7 @@ export async function voteNote(noteId: number, voteType: 1 | -1, path: string) {
             }
         } else {
             // Change vote (update)
-            const { error: updateError } = await supabaseServer
+            const { error: updateError } = await adminClient
                 .from("note_votes")
                 .update({ vote_type: voteType })
                 .eq("id", existingVote.id);
@@ -80,7 +56,7 @@ export async function voteNote(noteId: number, voteType: 1 | -1, path: string) {
         }
     } else {
         // New vote (insert)
-        const { error: insertError } = await supabaseServer
+        const { error: insertError } = await adminClient
             .from("note_votes")
             .insert({
                 user_id: user.id,
@@ -99,7 +75,8 @@ export async function voteNote(noteId: number, voteType: 1 | -1, path: string) {
 }
 
 export async function getNote(noteId: number) {
-    const { data: note, error } = await supabaseServer
+    const adminClient = await createAdminClient();
+    const { data: note, error } = await adminClient
         .from("notes")
         .select(`
             id,
@@ -135,31 +112,14 @@ export async function updateNote(noteId: number, data: {
     group_id?: string | null;
 }) {
     // 1. Auth check
-    const cookieStore = await cookies();
-    const supabaseAuth = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-            cookies: {
-                getAll() {
-                    return cookieStore.getAll();
-                },
-                setAll(cookiesToSet) {
-                    try {
-                        cookiesToSet.forEach(({ name, value, options }) =>
-                            cookieStore.set(name, value, options)
-                        )
-                    } catch { }
-                },
-            },
-        }
-    );
+    const supabaseAuth = await createClient();
 
     const { data: { user } } = await supabaseAuth.auth.getUser();
     if (!user) return { error: "Not authenticated" };
 
+    const adminClient = await createAdminClient();
     // 2. Fetch current note to verify ownership
-    const { data: existingNote } = await supabaseServer
+    const { data: existingNote } = await adminClient
         .from("notes")
         .select("author_id")
         .eq("id", noteId)
@@ -170,7 +130,7 @@ export async function updateNote(noteId: number, data: {
     }
 
     // 3. Update note (Bypass RLS)
-    const { error } = await supabaseServer
+    const { error } = await adminClient
         .from("notes")
         .update(data)
         .eq("id", noteId);

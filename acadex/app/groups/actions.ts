@@ -1,8 +1,6 @@
 "use server";
 
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
-import { supabaseServer } from "@/utils/supabase/server";
+import { createClient, createAdminClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 
 // Utility to generate a random 8-character invite code
@@ -11,30 +9,15 @@ function generateInviteCode() {
 }
 
 export async function createGroup(name: string, password?: string) {
-    const cookieStore = await cookies();
-    const supabaseAuth = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-            cookies: {
-                getAll() { return cookieStore.getAll(); },
-                setAll(cookiesToSet) {
-                    try {
-                        cookiesToSet.forEach(({ name, value, options }) =>
-                            cookieStore.set(name, value, options)
-                        );
-                    } catch { }
-                },
-            },
-        }
-    );
+    const supabaseAuth = await createClient();
 
     const { data: { user } } = await supabaseAuth.auth.getUser();
     if (!user) return { error: "Not authenticated" };
 
     const inviteCode = generateInviteCode();
 
-    const { data, error } = await supabaseServer
+    const adminClient = await createAdminClient();
+    const { data, error } = await adminClient
         .from("groups")
         .insert({
             name,
@@ -51,7 +34,7 @@ export async function createGroup(name: string, password?: string) {
     }
 
     // Automatically add creator as admin member
-    const { error: memberError } = await supabaseServer
+    const { error: memberError } = await adminClient
         .from("group_members")
         .insert({
             group_id: data.id,
@@ -68,29 +51,14 @@ export async function createGroup(name: string, password?: string) {
 }
 
 export async function joinGroup(inviteCode: string, password?: string) {
-    const cookieStore = await cookies();
-    const supabaseAuth = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-            cookies: {
-                getAll() { return cookieStore.getAll(); },
-                setAll(cookiesToSet) {
-                    try {
-                        cookiesToSet.forEach(({ name, value, options }) =>
-                            cookieStore.set(name, value, options)
-                        );
-                    } catch { }
-                },
-            },
-        }
-    );
+    const supabaseAuth = await createClient();
 
     const { data: { user } } = await supabaseAuth.auth.getUser();
     if (!user) return { error: "Not authenticated" };
 
+    const adminClient = await createAdminClient();
     // 1. Find the group
-    const { data: group, error: fetchError } = await supabaseServer
+    const { data: group, error: fetchError } = await adminClient
         .from("groups")
         .select("*")
         .eq("invite_code", inviteCode.toUpperCase())
@@ -104,7 +72,7 @@ export async function joinGroup(inviteCode: string, password?: string) {
     }
 
     // 3. Add user as member
-    const { error: joinError } = await supabaseServer
+    const { error: joinError } = await adminClient
         .from("group_members")
         .insert({
             group_id: group.id,
@@ -124,29 +92,14 @@ export async function joinGroup(inviteCode: string, password?: string) {
 }
 
 export async function fetchUserGroups() {
-    const cookieStore = await cookies();
-    const supabaseAuth = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-            cookies: {
-                getAll() { return cookieStore.getAll(); },
-                setAll(cookiesToSet) {
-                    try {
-                        cookiesToSet.forEach(({ name, value, options }) =>
-                            cookieStore.set(name, value, options)
-                        );
-                    } catch { }
-                },
-            },
-        }
-    );
+    const supabaseAuth = await createClient();
 
     const { data: { user } } = await supabaseAuth.auth.getUser();
     if (!user) return [];
 
+    const adminClient = await createAdminClient();
     // 1. Get IDs of groups the user belongs to
-    const { data: myMemberships } = await supabaseServer
+    const { data: myMemberships } = await adminClient
         .from("group_members")
         .select("group_id")
         .eq("user_id", user.id);
@@ -155,7 +108,7 @@ export async function fetchUserGroups() {
     const groupIds = myMemberships.map(m => m.group_id);
 
     // 2. Fetch those groups (Bypassing RLS)
-    const { data: groups, error: groupsError } = await supabaseServer
+    const { data: groups, error: groupsError } = await adminClient
         .from("groups")
         .select("id, name, invite_code, creator_id")
         .in("id", groupIds);
@@ -166,7 +119,7 @@ export async function fetchUserGroups() {
     }
 
     // 3. Fetch all members with their profiles for these groups
-    const { data: allMembers, error: membersError } = await supabaseServer
+    const { data: allMembers, error: membersError } = await adminClient
         .from("group_members")
         .select("group_id, user_id, role")
         .in("group_id", groupIds);
@@ -178,7 +131,7 @@ export async function fetchUserGroups() {
 
     // 4. Fetch profiles for all member user_ids
     const userIds = Array.from(new Set(allMembers.map(m => m.user_id)));
-    const { data: profiles } = await supabaseServer
+    const { data: profiles } = await adminClient
         .from("profiles")
         .select("id, username")
         .in("id", userIds);
@@ -201,7 +154,8 @@ export async function fetchUserGroups() {
 }
 
 export async function getGroupById(groupId: string) {
-    const { data, error } = await supabaseServer
+    const adminClient = await createAdminClient();
+    const { data, error } = await adminClient
         .from("groups")
         .select("id, name, invite_code")
         .eq("id", groupId)
