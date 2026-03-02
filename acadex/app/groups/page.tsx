@@ -157,11 +157,10 @@ export default function GroupsPage() {
                         {g.group_members?.map((m: any) => (
                           <span
                             key={m.user_id}
-                            className={`text-xs px-2 py-1 rounded-md border ${
-                              m.role === "admin"
+                            className={`text-xs px-2 py-1 rounded-md border ${m.role === "admin"
                                 ? "border-yellow-300 bg-yellow-50 text-yellow-700"
                                 : "border-blue-100 bg-blue-50 text-blue-700"
-                            }`}
+                              }`}
                             title={m.role === "admin" ? "Admin" : "Member"}
                           >
                             {m.profiles?.username || "Unknown"}
@@ -172,12 +171,20 @@ export default function GroupsPage() {
                     </div>
                   </div>
 
-                  <button
-                    onClick={() => router.push(`/dashboard?group=${g.id}`)}
-                    className="w-full bg-gray-900 text-white text-sm font-bold py-3 rounded-lg hover:bg-black transition shadow-sm"
-                  >
-                    View Group Notes
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => router.push(`/groups/${g.id}`)}
+                      className="flex-1 bg-blue-600 text-white text-sm font-bold py-3 rounded-lg hover:bg-blue-700 transition shadow-sm"
+                    >
+                      Enter Study Room 💬
+                    </button>
+                    <button
+                      onClick={() => router.push(`/dashboard?group=${g.id}`)}
+                      className="flex-1 bg-gray-900 text-white text-sm font-bold py-3 rounded-lg hover:bg-black transition shadow-sm"
+                    >
+                      Group Notes 📝
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>

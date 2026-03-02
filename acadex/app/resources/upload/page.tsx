@@ -14,7 +14,19 @@ export default function UploadResourcePage() {
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
 
+    // For request fulfillment
+    const [queryCourse, setQueryCourse] = useState("");
+    const [queryTopic, setQueryTopic] = useState("");
+
+
     useEffect(() => {
+        // Parse query params manually since we are in client component
+        const params = new URLSearchParams(window.location.search);
+        const c = params.get("course");
+        const t = params.get("topic");
+        if (c) setQueryCourse(c);
+        if (t) setQueryTopic(t);
+
         async function checkAuth() {
             const {
                 data: { user },
@@ -109,6 +121,14 @@ export default function UploadResourcePage() {
                     <h1 className="text-4xl font-bold text-gray-900">
                         📤 Upload Resource
                     </h1>
+                    {queryCourse && (
+                        <div className="mt-4 bg-purple-50 border border-purple-200 text-purple-800 px-4 py-3 rounded-lg flex items-center">
+                            <span className="mr-2">✨</span>
+                            <span>
+                                Fulfilling request for <strong>{queryTopic}</strong> in <strong>{queryCourse}</strong>
+                            </span>
+                        </div>
+                    )}
                     <p className="text-gray-500 mt-2">
                         Upload any file (PDF, image, video, etc.) to share with others.
                     </p>

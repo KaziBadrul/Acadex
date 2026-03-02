@@ -215,284 +215,340 @@ export default function NoteForm({ noteId, initialData }: NoteFormProps) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="p-10 max-w-5xl mx-auto space-y-8 bg-white border border-gray-100 shadow-2xl rounded-2xl mt-12 transition duration-300 hover:shadow-3xl"
+      className="space-y-8 fade-in duration-700"
     >
-      <h1 className="text-4xl font-extrabold text-center text-gray-900 tracking-tight border-b pb-4">
-        {noteId ? "✏️ Edit Academic Note" : "✍️ Create New Academic Note"}
-      </h1>
+      <div className="flex items-center justify-between border-b border-neutral-100 pb-6 mb-2">
+        <h1 className="text-3xl font-extrabold text-neutral-900 tracking-tight flex items-center gap-3">
+          {noteId ? (
+            <><span className="text-4xl">✏️</span> Edit Note</>
+          ) : (
+            <><span className="text-4xl">✨</span> New Note</>
+          )}
+        </h1>
+      </div>
 
       {message && (
         <div
-          className={`p-4 rounded-lg text-center font-medium border ${message.includes("Error")
-            ? "bg-red-50 text-red-700 border-red-300"
-            : "bg-green-50 text-green-700 border-green-300"
+          className={`px-4 py-3 rounded-xl text-sm font-medium border flex items-center justify-center gap-2 ${message.includes("Error") || message.includes("failed")
+              ? "bg-red-50/80 text-red-700 border-red-200"
+              : "bg-emerald-50/80 text-emerald-700 border-emerald-200"
             }`}
         >
+          {message.includes("Error") || message.includes("failed") ? "⚠️ " : "✅ "}
           {message}
         </div>
       )}
 
-      {/* Title */}
-      <div className="text-black">
-        <label className="block text-gray-700 font-semibold mb-2">
-          Note Title
-        </label>
-        <input
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          required
-          placeholder="e.g., Dijkstra's Algorithm: A Simple Explanation"
-          className="w-full p-4 border border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition duration-150 shadow-sm"
-        />
-      </div>
-
-      {/* Course and Topic */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-black">
-        <div>
-          <label className="block text-gray-700 font-semibold mb-2">
-            Course (e.g., CSE 4510)
+      {/* Main Form Fields Container */}
+      <div className="space-y-6">
+        {/* Title */}
+        <div className="group">
+          <label className="block text-sm font-bold text-neutral-700 mb-2 transition-colors group-focus-within:text-indigo-600 uppercase tracking-wider">
+            Note Title
           </label>
           <input
             type="text"
-            value={course}
-            onChange={(e) => setCourse(e.target.value)}
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
             required
-            placeholder="Course Code"
-            className="w-full p-4 border border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition duration-150 shadow-sm"
+            placeholder="e.g., Dijkstra's Algorithm: A Simple Explanation"
+            className="w-full px-5 py-4 bg-neutral-50/50 border border-neutral-200 rounded-xl focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all duration-300 text-neutral-900 placeholder:text-neutral-400 font-medium text-lg shadow-sm"
           />
         </div>
-        <div className="text-black">
-          <label className="block text-gray-700 font-semibold mb-2">
-            Topic (e.g., Graph Theory)
-          </label>
-          <input
-            type="text"
-            value={topic}
-            onChange={(e) => setTopic(e.target.value)}
-            required
-            placeholder="Specific Topic Name"
-            className="w-full p-4 border border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition duration-150 shadow-sm"
-          />
-        </div>
-      </div>
 
-      {/* Visibility */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-black">
-        <div>
-          <label className="block text-gray-700 font-semibold mb-2">
-            Visibility
-          </label>
-          <select
-            value={visibility}
-            onChange={(e) => setVisibility(e.target.value)}
-            className="w-full p-4 border border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition duration-150 shadow-sm bg-white"
-          >
-            <option value="public">Public (Everyone can see)</option>
-            <option value="private">Private (Only you can see)</option>
-            <option value="group">Group (Only members can see)</option>
-          </select>
-        </div>
-        {visibility === "group" && (
-          <div>
-            <label className="block text-gray-700 font-semibold mb-2">
-              Select Group
+        {/* Course and Topic */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="group">
+            <label className="block text-sm font-bold text-neutral-700 mb-2 transition-colors group-focus-within:text-indigo-600 uppercase tracking-wider">
+              Course Code
             </label>
-            <select
-              value={groupId}
-              onChange={(e) => setGroupId(e.target.value)}
-              required={visibility === "group"}
-              className="w-full p-4 border border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition duration-150 shadow-sm bg-white"
-            >
-              <option value="">-- Choose a Group --</option>
-              {userGroups.map((g) => (
-                <option key={g.id} value={g.id}>
-                  {g.name}
-                </option>
-              ))}
-            </select>
-            {userGroups.length === 0 && (
-              <p className="text-xs text-red-500 mt-1">You are not in any groups. Join one first!</p>
-            )}
+            <input
+              type="text"
+              value={course}
+              onChange={(e) => setCourse(e.target.value)}
+              required
+              placeholder="e.g., CSE 4510"
+              className="w-full px-5 py-3.5 bg-neutral-50/50 border border-neutral-200 rounded-xl focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all duration-300 text-neutral-900 placeholder:text-neutral-400 font-medium shadow-sm hover:border-neutral-300"
+            />
           </div>
-        )}
-      </div>
+          <div className="group">
+            <label className="block text-sm font-bold text-neutral-700 mb-2 transition-colors group-focus-within:text-indigo-600 uppercase tracking-wider">
+              Specific Topic
+            </label>
+            <input
+              type="text"
+              value={topic}
+              onChange={(e) => setTopic(e.target.value)}
+              required
+              placeholder="e.g., Graph Theory"
+              className="w-full px-5 py-3.5 bg-neutral-50/50 border border-neutral-200 rounded-xl focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all duration-300 text-neutral-900 placeholder:text-neutral-400 font-medium shadow-sm hover:border-neutral-300"
+            />
+          </div>
+        </div>
 
-      {/* Content (Markdown Editor Area) */}
-      <div className="">
-        <div className="w-fit h-fit flex items-center justify-center">
-          <label className="block text-gray-700 font-semibold">Content</label>
-          {/* Hidden file input */}
-          <input
-            type="file"
-            ref={fileInputRef}
-            hidden
-            accept="image/*,.pdf"
-            onChange={handleFileChange}
-          />
-          <button
-            type="button"
-            onClick={handleButtonClick}
-            className="bg-green-600 ml-10 px-4 py-2 rounded-2xl transition-all duration-300 hover:bg-green-700 cursor-pointer flex items-center justify-center"
-          >
-            <p className="font-bold">📃 Upload file</p>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setShowPad((s) => !s)}
-            className="bg-purple-600 ml-10 px-4 py-2 rounded-2xl transition-all duration-300 hover:bg-purple-700 cursor-pointer flex items-center justify-center"
-          >
-            <p className="font-bold">
-              {showPad ? "🧾 Hide Ink Pad" : "🖊️ Handwriting Pad"}
-            </p>
-          </button>
-
-          <button
-            type="button"
-            onClick={handleHandwritingButtonClick}
-            className="bg-blue-600 ml-10 px-4 py-2 rounded-2xl transition-all duration-300 hover:bg-blue-700 cursor-pointer flex items-center justify-center"
-          >
-            <p className="font-bold">✍️ Scan Handwriting</p>
-          </button>
-
-          <button
-            type="button"
-            onClick={handleVoiceButtonClick}
-            className="bg-amber-600 ml-10 px-4 py-2 rounded-2xl transition-all duration-300 hover:bg-amber-700 cursor-pointer flex items-center justify-center"
-          >
-            <p className="font-bold">🎙️ Voice to Text</p>
-          </button>
+        {/* Visibility */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="group">
+            <label className="block text-sm font-bold text-neutral-700 mb-2 transition-colors group-focus-within:text-indigo-600 uppercase tracking-wider">
+              Visibility Settings
+            </label>
+            <div className="relative">
+              <select
+                value={visibility}
+                onChange={(e) => setVisibility(e.target.value)}
+                className="appearance-none w-full px-5 py-3.5 bg-neutral-50/50 border border-neutral-200 rounded-xl focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all duration-300 text-neutral-900 font-medium shadow-sm hover:border-neutral-300 cursor-pointer"
+              >
+                <option value="public">🌍 Public (Everyone can see)</option>
+                <option value="private">🔒 Private (Only you can see)</option>
+                <option value="group">👥 Group (Only members can see)</option>
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-neutral-500">
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+              </div>
+            </div>
+          </div>
+          {visibility === "group" && (
+            <div className="group">
+              <label className="block text-sm font-bold text-neutral-700 mb-2 transition-colors group-focus-within:text-indigo-600 uppercase tracking-wider">
+                Select Group
+              </label>
+              <div className="relative">
+                <select
+                  value={groupId}
+                  onChange={(e) => setGroupId(e.target.value)}
+                  required={visibility === "group"}
+                  className="appearance-none w-full px-5 py-3.5 bg-neutral-50/50 border border-neutral-200 rounded-xl focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all duration-300 text-neutral-900 font-medium shadow-sm hover:border-neutral-300 cursor-pointer"
+                >
+                  <option value="">-- Choose a Group --</option>
+                  {userGroups.map((g) => (
+                    <option key={g.id} value={g.id}>
+                      {g.name}
+                    </option>
+                  ))}
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-neutral-500">
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                </div>
+              </div>
+              {userGroups.length === 0 && (
+                <p className="text-xs font-semibold text-red-500 mt-2 flex items-center gap-1">
+                  <span>⚠️</span> You are not in any groups. Join one first!
+                </p>
+              )}
+            </div>
+          )}
         </div>
       </div>
-      <div className=" text-white p-12">
-        <div className="max-w-3xl mx-auto space-y-8">
-          <header className="space-y-2">
-            <h1 className="text-4xl font-light tracking-tighter"></h1>
-            <p className="text-zinc-500 text-sm"></p>
-          </header>
 
-          {showPad && (
-            <HandwritingPad
-              disabled={loading}
-              onSaveInk={async (blob) => {
-                setLoading(true);
-                setMessage("Uploading handwriting...");
+      <div className="w-full h-px bg-gradient-to-r from-transparent via-neutral-200 to-transparent my-10"></div>
 
-                try {
-                  const file = new File(
-                    [blob],
-                    `handwriting-${Date.now()}.png`,
-                    {
-                      type: "image/png",
-                    },
-                  );
+      {/* Editor & Media Tools */}
+      <div className="bg-white/80 border border-neutral-200/80 rounded-[1.5rem] shadow-sm overflow-hidden">
+        {/* Toolbar */}
+        <div className="bg-neutral-50/50 border-b border-neutral-200/80 px-4 py-4 sm:px-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <h3 className="text-base font-bold text-neutral-900 mb-0.5 uppercase tracking-wider text-sm flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-indigo-500"></span> Content Tools
+              </h3>
+            </div>
 
-                  const fd = new FormData();
-                  fd.append("file", file);
-
-                  const res = await fetch("/api/handwriting-upload", {
-                    method: "POST",
-                    body: fd,
-                  });
-
-                  const json = await res.json().catch(() => null);
-
-                  if (!res.ok) {
-                    setMessage(
-                      "Upload failed: " + (json?.error ?? "Unknown error"),
-                    );
-                    return;
-                  }
-
-                  const url = json?.url as string | undefined;
-                  if (!url) {
-                    setMessage("Upload failed: no url returned");
-                    return;
-                  }
-
-                  // Insert image into TipTap HTML
-                  const imgHtml = `<p></p><img src="${url}" alt="handwriting" />`;
-                  setContent((prev) =>
-                    prev
-                      ? prev + imgHtml
-                      : `<img src="${url}" alt="handwriting" />`,
-                  );
-
-                  setMessage("Handwriting inserted into the note!");
-                } catch (e: any) {
-                  setMessage("Upload error: " + String(e?.message ?? e));
-                } finally {
-                  setLoading(false);
-                }
-              }}
-              onOcr={async (blob) => {
-                // Call your Cloudinary OCR route (FormData based)
-                setLoading(true);
-                setMessage("Running handwriting OCR...");
-
-                try {
-                  const file = new File(
-                    [blob],
-                    `handwriting-${Date.now()}.png`,
-                    {
-                      type: "image/png",
-                    },
-                  );
-
-                  const fd = new FormData();
-                  fd.append("file", file);
-                  fd.append("title", title || ""); // optional
-                  fd.append("course", course || ""); // optional
-                  fd.append("topic", topic || ""); // optional
-
-                  const res = await fetch("/api/handwriting-ocr", {
-                    method: "POST",
-                    body: fd,
-                  });
-
-                  const json = await res.json();
-                  if (!res.ok) throw new Error(json?.error ?? "OCR failed");
-
-                  const text = (json?.text as string) || "";
-
-                  // TipTap is HTML-based -> escape then insert
-                  const escaped = text
-                    .replaceAll("&", "&amp;")
-                    .replaceAll("<", "&lt;")
-                    .replaceAll(">", "&gt;");
-
-                  setContent((prev) =>
-                    prev
-                      ? prev + `<p></p><pre>${escaped}</pre>`
-                      : `<pre>${escaped}</pre>`,
-                  );
-
-                  setMessage("OCR text inserted into the editor.");
-                } catch (e: any) {
-                  setMessage("OCR error: " + String(e?.message ?? e));
-                } finally {
-                  setLoading(false);
-                }
-              }}
+            <input
+              type="file"
+              ref={fileInputRef}
+              hidden
+              accept="image/*,.pdf"
+              onChange={handleFileChange}
             />
+
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                onClick={handleButtonClick}
+                className="group relative flex items-center gap-2 px-4 py-2 bg-white border border-neutral-200 hover:border-indigo-300 hover:bg-indigo-50 text-neutral-700 hover:text-indigo-700 rounded-xl font-medium transition-all duration-200 shadow-[0_1px_2px_rgba(0,0,0,0.05)] hover:shadow-md active:scale-95 text-sm"
+              >
+                <div className="w-7 h-7 rounded-lg bg-indigo-100/50 text-indigo-600 flex items-center justify-center shrink-0 transition-transform group-hover:scale-110">📄</div>
+                <span>Upload</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowPad((s) => !s)}
+                className={`group relative flex items-center gap-2 px-4 py-2 bg-white border ${showPad ? 'border-purple-300 bg-purple-50 text-purple-700 shadow-inner' : 'border-neutral-200 hover:border-purple-300 hover:bg-purple-50 text-neutral-700 hover:text-purple-700 shadow-[0_1px_2px_rgba(0,0,0,0.05)] hover:shadow-md'} rounded-xl font-medium transition-all duration-200 active:scale-95 text-sm`}
+              >
+                <div className="w-7 h-7 rounded-lg bg-purple-100/50 text-purple-600 flex items-center justify-center shrink-0 transition-transform group-hover:scale-110">🖊️</div>
+                <span>{showPad ? "Hide Pad" : "Draw"}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleHandwritingButtonClick}
+                className="group relative flex items-center gap-2 px-4 py-2 bg-white border border-neutral-200 hover:border-blue-300 hover:bg-blue-50 text-neutral-700 hover:text-blue-700 rounded-xl font-medium transition-all duration-200 shadow-[0_1px_2px_rgba(0,0,0,0.05)] hover:shadow-md active:scale-95 text-sm"
+              >
+                <div className="w-7 h-7 rounded-lg bg-blue-100/50 text-blue-600 flex items-center justify-center shrink-0 transition-transform group-hover:scale-110">🔍</div>
+                <span>Scan</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleVoiceButtonClick}
+                className="group relative flex items-center gap-2 px-4 py-2 bg-white border border-neutral-200 hover:border-amber-300 hover:bg-amber-50 text-neutral-700 hover:text-amber-700 rounded-xl font-medium transition-all duration-200 shadow-[0_1px_2px_rgba(0,0,0,0.05)] hover:shadow-md active:scale-95 text-sm"
+              >
+                <div className="w-7 h-7 rounded-lg bg-amber-100/50 text-amber-600 flex items-center justify-center shrink-0 transition-transform group-hover:scale-110">🎙️</div>
+                <span>Voice</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Dynamic Tools Area */}
+        <div className="w-full bg-white relative">
+          {showPad && (
+            <div className="border-b border-neutral-100 bg-neutral-50/30 p-4">
+              <div className="bg-white rounded-xl border border-neutral-200 shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)] overflow-hidden">
+                <HandwritingPad
+                  disabled={loading}
+                  onSaveInk={async (blob) => {
+                    setLoading(true);
+                    setMessage("Uploading handwriting...");
+
+                    try {
+                      const file = new File(
+                        [blob],
+                        `handwriting-${Date.now()}.png`,
+                        {
+                          type: "image/png",
+                        },
+                      );
+
+                      const fd = new FormData();
+                      fd.append("file", file);
+
+                      const res = await fetch("/api/handwriting-upload", {
+                        method: "POST",
+                        body: fd,
+                      });
+
+                      const json = await res.json().catch(() => null);
+
+                      if (!res.ok) {
+                        setMessage(
+                          "Upload failed: " + (json?.error ?? "Unknown error"),
+                        );
+                        return;
+                      }
+
+                      const url = json?.url as string | undefined;
+                      if (!url) {
+                        setMessage("Upload failed: no url returned");
+                        return;
+                      }
+
+                      // Insert image into TipTap HTML
+                      const imgHtml = `<p></p><img src="${url}" alt="handwriting" />`;
+                      setContent((prev) =>
+                        prev
+                          ? prev + imgHtml
+                          : `<img src="${url}" alt="handwriting" />`,
+                      );
+
+                      setMessage("Handwriting inserted into the note!");
+                    } catch (e: any) {
+                      setMessage("Upload error: " + String(e?.message ?? e));
+                    } finally {
+                      setLoading(false);
+                    }
+                  }}
+                  onOcr={async (blob) => {
+                    // Call your Cloudinary OCR route (FormData based)
+                    setLoading(true);
+                    setMessage("Running handwriting OCR...");
+
+                    try {
+                      const file = new File(
+                        [blob],
+                        `handwriting-${Date.now()}.png`,
+                        {
+                          type: "image/png",
+                        },
+                      );
+
+                      const fd = new FormData();
+                      fd.append("file", file);
+                      fd.append("title", title || ""); // optional
+                      fd.append("course", course || ""); // optional
+                      fd.append("topic", topic || ""); // optional
+
+                      const res = await fetch("/api/handwriting-ocr", {
+                        method: "POST",
+                        body: fd,
+                      });
+
+                      const json = await res.json();
+                      if (!res.ok) throw new Error(json?.error ?? "OCR failed");
+
+                      const text = (json?.text as string) || "";
+
+                      // TipTap is HTML-based -> escape then insert
+                      const escaped = text
+                        .replaceAll("&", "&amp;")
+                        .replaceAll("<", "&lt;")
+                        .replaceAll(">", "&gt;");
+
+                      setContent((prev) =>
+                        prev
+                          ? prev + `<p></p><pre>${escaped}</pre>`
+                          : `<pre>${escaped}</pre>`,
+                      );
+
+                      setMessage("OCR text inserted into the editor.");
+                    } catch (e: any) {
+                      setMessage("OCR error: " + String(e?.message ?? e));
+                    } finally {
+                      setLoading(false);
+                    }
+                  }}
+                />
+              </div>
+            </div>
           )}
 
-          <Tiptap
-            content={content}
-            onChange={(newHtml) => setContent(newHtml)}
-          />
+          <div className="min-h-[400px] w-full group-editor">
+            <Tiptap
+              content={content}
+              onChange={(newHtml) => setContent(newHtml)}
+            />
+          </div>
         </div>
       </div>
 
-      {/* Submit Button */}
-      <button
-        type="submit"
-        disabled={loading}
-        className="w-full bg-blue-600 text-white font-extrabold py-4 rounded-xl shadow-lg hover:bg-blue-700 transition duration-300 ease-in-out transform hover:scale-[1.005] disabled:bg-gray-400 disabled:shadow-none"
-      >
-        {loading ? "Processing..." : noteId ? "Save Changes" : "🚀 Publish Note to Acadex"}
-      </button>
+      {/* Submit Action */}
+      <div className="pt-4">
+        <button
+          type="submit"
+          disabled={loading}
+          className="relative overflow-hidden w-full group py-5 px-6 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-[1.25rem] font-bold shadow-xl hover:shadow-indigo-500/25 active:scale-[0.98] transition-all duration-300 disabled:from-neutral-300 disabled:to-neutral-400 disabled:shadow-none disabled:active:scale-100 disabled:cursor-not-allowed"
+        >
+          <div className="absolute inset-0 w-full h-full bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
+          <span className="relative z-10 flex items-center justify-center gap-3 text-lg">
+            {loading ? (
+              <>
+                <svg className="animate-spin -ml-1 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Processing...
+              </>
+            ) : noteId ? (
+              "Save Changes"
+            ) : (
+              <>
+                Publish to Acadex <span className="text-xl group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform inline-block duration-300">↗</span>
+              </>
+            )}
+          </span>
+        </button>
+      </div>
     </form>
   );
 }
