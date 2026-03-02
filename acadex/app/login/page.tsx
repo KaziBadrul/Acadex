@@ -9,12 +9,13 @@ export default function LoginPage() {
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-muted/20 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[30%] h-[30%] bg-accent/20 rounded-full blur-3xl pointer-events-none" />
 
-      <div className="w-full max-w-md z-10">
-        <div className="flex justify-center mb-8">
-          <div className="flex items-center gap-3 text-primary">
-            <BookOpen className="w-10 h-10" />
-            <span className="text-3xl font-bold tracking-tight">Acadex</span>
-          </div>
+      <div className="w-full max-w-md z-10 flex flex-col items-center">
+        <div className="w-full mb-8 animate-in fade-in slide-in-from-bottom-2 duration-700">
+          <img
+            src="/ACADEX_dark.png"
+            alt="Acadex"
+            className="w-full h-auto object-contain max-w-[400px] mx-auto"
+          />
         </div>
         <AuthForm />
       </div>

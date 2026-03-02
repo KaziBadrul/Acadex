@@ -78,8 +78,8 @@ export default function NoteEditPage() {
     }
 
     return (
-        <div className="bg-white min-h-screen pb-12">
+        <main className="w-full pb-10">
             <NoteForm noteId={noteId} initialData={noteData} />
-        </div>
+        </main>
     );
 }

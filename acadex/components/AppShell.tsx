@@ -27,8 +27,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
     const [isOpen, setIsOpen] = useState(false);
 
-    // Do not wrap login page in the shell
-    if (pathname === "/login") {
+    // Do not wrap login page or landing page in the shell
+    if (pathname === "/login" || pathname === "/") {
         return <>{children}</>;
     }
 
@@ -69,7 +69,13 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 {/* Navigation */}
                 <nav className="flex-1 px-4 py-8 space-y-2 overflow-y-auto">
                     {SIDEBAR_ITEMS.map((item) => {
-                        const isActive = pathname === item.href || pathname?.startsWith(item.href + "/");
+                        let isActive = pathname === item.href || pathname?.startsWith(item.href + "/");
+
+                        // Special case: prevent "Notes" highlighting when on "Upload" page
+                        if (item.href === "/notes" && pathname === "/notes/upload") {
+                            isActive = false;
+                        }
+
                         const Icon = item.icon;
 
                         return (

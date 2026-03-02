@@ -159,6 +159,8 @@ export async function getNotes() {
             type,
             author_id,
             visibility,
+            group_id,
+            groups(id, name),
             profiles(username)
         `)
         .order("created_at", { ascending: false });
