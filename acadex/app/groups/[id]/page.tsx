@@ -193,7 +193,9 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
                                 >
                                     <div className="min-w-0 pr-4">
                                         <p className="font-semibold text-primary truncate">
-                                            {member.profiles?.username || "Unknown User"}
+                                            {Array.isArray(member.profiles)
+                                                ? (member.profiles[0]?.username || "Unknown User")
+                                                : (member.profiles?.username || "Unknown User")}
                                         </p>
                                         <p className="text-[10px] text-primary/40 mt-0.5">
                                             Joined {new Date(member.joined_at).toLocaleDateString()}
@@ -203,8 +205,8 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
                                     <div className="flex items-center gap-2 shrink-0">
                                         <span
                                             className={`flex items-center gap-1 px-2.5 py-1 text-[10px] font-semibold rounded-md ${member.role === "admin"
-                                                    ? "bg-amber-50 text-amber-700 border border-amber-200"
-                                                    : "bg-muted/10 text-primary/70 border border-muted/20"
+                                                ? "bg-amber-50 text-amber-700 border border-amber-200"
+                                                : "bg-muted/10 text-primary/70 border border-muted/20"
                                                 }`}
                                         >
                                             {member.role === "admin" && <Shield className="w-3 h-3" />}
@@ -234,7 +236,7 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
                             <h3 className="font-bold text-primary">virtual study room</h3>
                             <p className="text-xs text-primary/50">Discuss notes and topics with {group.name}</p>
                         </div>
-                        <div className="flex-1 bg-background relative">
+                        <div className="flex-1 bg-background relative min-h-0">
                             {user ? (
                                 <GroupChat
                                     groupId={groupIdString}

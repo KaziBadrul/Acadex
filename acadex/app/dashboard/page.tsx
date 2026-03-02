@@ -252,7 +252,7 @@ function DashboardContent() {
               <Plus className="w-4 h-4" /> Create
             </Link>
             <Link
-              href="/upload"
+              href="/notes/upload"
               className="flex items-center gap-1.5 text-sm font-medium text-primary hover:text-primary/70 bg-muted/10 hover:bg-muted/20 px-3 py-1.5 rounded-lg transition-colors"
             >
               <Upload className="w-4 h-4" /> Upload
@@ -328,8 +328,8 @@ function DashboardContent() {
               key={t}
               onClick={() => setFilter(t)}
               className={`px-4 py-1.5 text-sm font-medium rounded-lg capitalize transition-all ${filter === t
-                  ? "bg-muted/20 text-primary"
-                  : "text-primary/60 hover:text-primary hover:bg-muted/5"
+                ? "bg-muted/20 text-primary"
+                : "text-primary/60 hover:text-primary hover:bg-muted/5"
                 }`}
             >
               {t} {t === 'all' ? `(${notes.length})` : t === 'notes' ? `(${noteCount})` : `(${pdfCount})`}
@@ -431,10 +431,10 @@ function DashboardContent() {
 
                     <span
                       className={`px-2.5 py-1 text-xs font-medium rounded-md border ${note.visibility === "private"
-                          ? "bg-slate-50 border-slate-200 text-slate-600"
-                          : note.visibility === "group"
-                            ? "bg-purple-50 border-purple-200 text-purple-600"
-                            : "bg-green-50 border-green-200 text-green-600"
+                        ? "bg-slate-50 border-slate-200 text-slate-600"
+                        : note.visibility === "group"
+                          ? "bg-purple-50 border-purple-200 text-purple-600"
+                          : "bg-green-50 border-green-200 text-green-600"
                         }`}
                     >
                       {note.visibility.charAt(0).toUpperCase() + note.visibility.slice(1)}

@@ -27,10 +27,15 @@ export default function GroupChat({ groupId, currentUserId }: GroupChatProps) {
 
     useEffect(() => {
         async function loadMessages() {
-            const initialMessages = await getGroupMessages(groupId);
-            setMessages(initialMessages);
-            setLoading(false);
-            scrollToBottom();
+            try {
+                const initialMessages = await getGroupMessages(groupId);
+                setMessages(initialMessages);
+            } catch (error) {
+                console.error("Failed to load messages:", error);
+            } finally {
+                setLoading(false);
+                setTimeout(scrollToBottom, 100);
+            }
         }
 
         loadMessages();
@@ -98,13 +103,13 @@ export default function GroupChat({ groupId, currentUserId }: GroupChatProps) {
     }
 
     return (
-        <div className="flex flex-col h-full bg-background rounded-b-2xl overflow-hidden relative">
+        <div className="flex flex-col absolute inset-0 bg-background rounded-b-2xl overflow-hidden">
             {/* Header (Optional, if we want an inner header. The parent already provides one so we skip the big blue bar) */}
 
             {/* Message List */}
             <div
                 ref={scrollRef}
-                className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar"
+                className="flex-1 overflow-y-auto min-h-0 p-6 space-y-6 custom-scrollbar"
             >
                 {messages.length === 0 ? (
                     <div className="h-full flex flex-col items-center justify-center text-primary/40 space-y-4 max-w-sm mx-auto text-center">
@@ -129,7 +134,9 @@ export default function GroupChat({ groupId, currentUserId }: GroupChatProps) {
                                     <div className={`flex items-baseline gap-2 mb-1.5 px-1 ${isMe ? "flex-row-reverse" : "flex-row"}`}>
                                         {!isMe && (
                                             <span className="text-xs font-bold text-primary/70">
-                                                {msg.profiles?.username || (msg as any).profiles?.username || "Unknown user"}
+                                                {Array.isArray(msg.profiles)
+                                                    ? (msg.profiles[0]?.username || "Unknown user")
+                                                    : (msg.profiles?.username || "Unknown user")}
                                             </span>
                                         )}
                                         <span className="text-[10px] font-medium text-primary/40">
@@ -139,8 +146,8 @@ export default function GroupChat({ groupId, currentUserId }: GroupChatProps) {
                                 )}
                                 <div
                                     className={`max-w-[75%] px-4 py-2.5 text-sm shadow-sm transition-all relative ${isMe
-                                            ? "bg-primary text-white rounded-2xl rounded-tr-sm"
-                                            : "bg-card text-primary border border-muted/20 rounded-2xl rounded-tl-sm"
+                                        ? "bg-primary text-white rounded-2xl rounded-tr-sm"
+                                        : "bg-card text-primary border border-muted/20 rounded-2xl rounded-tl-sm"
                                         }`}
                                 >
                                     {msg.content}
