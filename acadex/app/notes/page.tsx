@@ -15,7 +15,7 @@ type VisibilityFilter = "public" | "private" | "group" | null;
 const OWNER_TABS: { id: OwnerFilter; label: string }[] = [
     { id: "all", label: "All Notes" },
     { id: "mine", label: "My Notes" },
-    { id: "others", label: "Others'" },
+    { id: "others", label: "Others" },
 ];
 
 const VISIBILITY_PILLS: { id: "public" | "private" | "group"; label: string; icon: React.ElementType; active: string; inactive: string }[] = [
