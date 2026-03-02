@@ -4,7 +4,17 @@ import { BookOpen } from "lucide-react";
 
 export default function LoginPage() {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-background p-4 relative overflow-hidden">
+    <main
+      className="flex min-h-screen items-center justify-center bg-background p-4 relative overflow-hidden"
+      style={{
+        '--background': '#f7f5e8',
+        '--foreground': '#30364f',
+        '--primary': '#30364f',
+        '--muted': '#acbac4',
+        '--accent': '#e1d9bc',
+        '--card': '#ffffff',
+      } as React.CSSProperties}
+    >
       {/* Decorative subtle background accents */}
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-muted/20 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[30%] h-[30%] bg-accent/20 rounded-full blur-3xl pointer-events-none" />
