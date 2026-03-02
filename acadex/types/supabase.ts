@@ -262,6 +262,83 @@ export type Database = {
           },
         ]
       }
+      flashcard_decks: {
+        Row: {
+          id: number
+          note_id: number
+          title: string
+          created_by: string | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: number
+          note_id: number
+          title: string
+          created_by?: string | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: number
+          note_id?: number
+          title?: string
+          created_by?: string | null
+          created_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flashcard_decks_note_id_fkey"
+            columns: ["note_id"]
+            isOneToOne: false
+            referencedRelation: "notes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "flashcard_decks_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      flashcards: {
+        Row: {
+          id: number
+          deck_id: number
+          question: string
+          answer: string
+          mastered: boolean
+          last_reviewed: string | null
+          review_count: number
+        }
+        Insert: {
+          id?: number
+          deck_id: number
+          question: string
+          answer: string
+          mastered?: boolean
+          last_reviewed?: string | null
+          review_count?: number
+        }
+        Update: {
+          id?: number
+          deck_id?: number
+          question?: string
+          answer?: string
+          mastered?: boolean
+          last_reviewed?: string | null
+          review_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flashcards_deck_id_fkey"
+            columns: ["deck_id"]
+            isOneToOne: false
+            referencedRelation: "flashcard_decks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

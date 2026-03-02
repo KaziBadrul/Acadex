@@ -7,9 +7,9 @@ import Link from "next/link";
 import { createClient } from "@/utils/supabase/client";
 import MarkdownRenderer from "./MarkdownRenderer";
 import VoteButtons from "./VoteButtons";
-import { getNote } from "@/app/notes/actions";
+import { getNote, generateFlashcards } from "@/app/notes/actions";
 import CommentSection from "./CommentSection";
-import { FileText, Edit3, Trash2, ExternalLink, Calendar, GitCommit, User as UserIcon, BookOpen, Clock, AlertCircle } from "lucide-react";
+import { FileText, Edit3, Trash2, ExternalLink, Calendar, GitCommit, User as UserIcon, BookOpen, Clock, AlertCircle, Sparkles } from "lucide-react";
 
 interface NoteFetcherProps {
   noteId: number;
@@ -56,9 +56,25 @@ export default function NoteFetcher({ noteId }: NoteFetcherProps) {
   const [sessionUser, setSessionUser] = useState<{ id: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [deckId, setDeckId] = useState<number | null>(null);
 
   const supabase = createClient();
   const router = useRouter();
+
+  const handleGenerateFlashcards = async () => {
+    if (!note) {
+      console.warn("Generate button clicked but note object missing");
+      return;
+    }
+    console.log("Generating flashcards for note", note);
+    if (typeof note.id !== "number" || isNaN(note.id)) {
+      alert("Unable to generate flashcards: invalid note id received");
+      return;
+    }
+    // navigate to the server‑side generation page; that page will call the
+    // same action and redirect once the deck has been created.
+    router.push(`/notes/${note.id}/generate`);
+  };
 
   useEffect(() => {
     async function fetchNoteData() {
@@ -103,6 +119,16 @@ export default function NoteFetcher({ noteId }: NoteFetcherProps) {
         }
       } else {
         setNote(noteData as NoteData);
+      }
+
+      // check if a deck already exists for this note
+      if (noteData) {
+        const { data: existingDeck } = await supabase
+          .from("flashcard_decks")
+          .select("id")
+          .eq("note_id", noteData.id)
+          .single();
+        if (existingDeck) setDeckId(existingDeck.id as number);
       }
 
       setLoading(false);
@@ -188,23 +214,49 @@ export default function NoteFetcher({ noteId }: NoteFetcherProps) {
           </div>
         </div>
 
-        {/* Action Bar (Only visible to author) */}
-        {isAuthor && (
-          <div className="flex justify-end gap-3 mb-8">
+        {/* Action Bar */}
+        <div className="flex justify-end gap-3 mb-8">
+          {isAuthor && (
+            <>
+              <Link
+                href={`/notes/${noteId}/edit`}
+                className="flex items-center gap-2 px-4 py-2 bg-muted/10 hover:bg-muted/20 text-primary font-medium rounded-xl transition-all text-sm"
+              >
+                <Edit3 className="w-4 h-4" /> Edit {isPdf ? 'Metadata' : 'Note'}
+              </Link>
+              <button
+                onClick={handleDelete}
+                className="flex items-center gap-2 px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 font-medium rounded-xl transition-all text-sm"
+              >
+                <Trash2 className="w-4 h-4" /> Delete
+              </button>
+            </>
+          )}
+
+          {/* generate/view buttons available to any logged-in user with access */}
+          {!deckId && note?.id != null && (
             <Link
-              href={`/notes/${noteId}/edit`}
-              className="flex items-center gap-2 px-4 py-2 bg-muted/10 hover:bg-muted/20 text-primary font-medium rounded-xl transition-all text-sm"
+              href={`/notes/${encodeURIComponent(String(note.id))}/generate`}
+              onClick={(e) => {
+                if (typeof note.id !== "number" || isNaN(note.id)) {
+                  e.preventDefault();
+                  alert("Invalid note ID, cannot generate flashcards");
+                }
+              }}
+              className="flex items-center gap-2 px-4 py-2 bg-amber-50 hover:bg-amber-100 text-amber-700 font-medium rounded-xl transition-all text-sm"
             >
-              <Edit3 className="w-4 h-4" /> Edit {isPdf ? 'Metadata' : 'Note'}
+              <Sparkles className="w-4 h-4" /> Generate Flashcards
             </Link>
-            <button
-              onClick={handleDelete}
-              className="flex items-center gap-2 px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 font-medium rounded-xl transition-all text-sm"
+          )}
+          {deckId && (
+            <Link
+              href={`/decks/${deckId}`}
+              className="flex items-center gap-2 px-4 py-2 bg-green-50 hover:bg-green-100 text-green-700 font-medium rounded-xl transition-all text-sm"
             >
-              <Trash2 className="w-4 h-4" /> Delete
-            </button>
-          </div>
-        )}
+              <BookOpen className="w-4 h-4" /> View Flashcards
+            </Link>
+          )}
+        </div>
 
         {/* ===== CONTENT ===== */}
         <div className="prose prose-slate max-w-none">

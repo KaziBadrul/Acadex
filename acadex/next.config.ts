@@ -13,6 +13,15 @@ const nextConfig: NextConfig = {
     "react-kapsule"
   ],
   serverExternalPackages: [],
+  // disable source maps in dev builds to avoid "Invalid source map" warnings
+  webpack(config, { dev, isServer }) {
+    if (dev) {
+      config.devtool = false;
+    }
+    return config;
+  },
+  // explicit turbopack config to silence informational message
+  turbopack: {},
 };
 
 export default nextConfig;

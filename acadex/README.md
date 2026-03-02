@@ -83,6 +83,18 @@ Ensure you have the following installed:
 
     # Web Push (if applicable)
     NEXT_PUBLIC_VAPID_PUBLIC_KEY=your_vapid_public_key
+
+    # Gemini LLM (Google AI Studio) – replace with your key/endpoint
+    GEMINI_API_KEY=your_gemini_api_key_here
+    # you can also specify a full endpoint; defaults to
+    # https://generativelanguage.googleapis.com/v1beta2/models/gemini-1.0:generate
+    GEMINI_API_ENDPOINT=https://api.example.com/v1/models/gemini:generate
+
+
+Flashcard generation occurs on a separate page (`/notes/[id]/generate`).
+When you click the **Generate Flashcards** button the client will navigate
+there; the server component calls Gemini with your key, creates a deck, and
+then immediately redirects to `/decks/<deckId>` once the cards are ready.
     ```
 
 4.  **Run the development server:**

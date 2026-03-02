@@ -2,6 +2,8 @@
 
 import { createClient, createAdminClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
+import { generateQAFromText } from "@/lib/gemini";
+import { heuristicGenerate } from "@/lib/flashcards";
 
 export async function voteNote(noteId: number, voteType: 1 | -1, path: string) {
     // 1. Get current user safely using cookies
@@ -171,4 +173,102 @@ export async function getNotes() {
     }
 
     return { notes };
+}
+
+// ---------- flashcard support ----------
+
+export type FlashcardResult =
+    | { deck: any }
+    | { error: string };
+
+export async function generateFlashcards(noteId: number): Promise<FlashcardResult> {
+    // require authenticated user
+    const supabaseAuth = await createClient();
+    const {
+        data: { user },
+    } = await supabaseAuth.auth.getUser();
+    if (!user) {
+        return { error: "Not authenticated" };
+    }
+
+    const adminClient = await createAdminClient();
+    const { data: note, error: fetchError } = await adminClient
+        .from("notes")
+        .select("title,content")
+        .eq("id", noteId)
+        .single();
+
+    if (fetchError || !note) {
+        console.error("generateFlashcards fetch note error", fetchError);
+        return { error: "Note not found" };
+    }
+
+    let qaPairs = [];
+    // first attempt an LLM call; will be empty if no key or failure
+    qaPairs = await generateQAFromText(note.content || "");
+    if (!qaPairs.length) {
+        // fallback to a simple heuristic so the feature still works offline
+        qaPairs = heuristicGenerate(note.content || "");
+    }
+
+    // Insert the deck using the admin client
+    const { data: deck, error: insertDeckError } = await adminClient
+        .from("flashcard_decks")
+        .insert({
+            note_id: noteId,
+            title: `Deck from ${note.title}`,
+            created_by: user.id,
+        })
+        .select()
+        .single();
+
+    if (insertDeckError || !deck) {
+        console.error("error creating deck. Full error:", JSON.stringify(insertDeckError, null, 2));
+        if (insertDeckError?.code === "PGRST205") {
+            console.error("HINT: The table 'flashcard_decks' was not found. Please ensure you have run the migration 'migrations/04_add_flashcards.sql' in your Supabase SQL editor.");
+        }
+        console.error("Attempted data:", { noteId, userId: user.id });
+
+        // If it failed because of foreign key on created_by (e.g. profile doesn't exist)
+        // try one more time without created_by
+        if (insertDeckError?.code === "23503" && (insertDeckError as any).details?.includes("created_by")) {
+            const { data: deckNoUser, error: retryError } = await adminClient
+                .from("flashcard_decks")
+                .insert({
+                    note_id: noteId,
+                    title: `Deck from ${note.title} (profile-less)`,
+                })
+                .select()
+                .single();
+
+            if (!retryError && deckNoUser) {
+                // Succeeded without user, continue with this deck
+                return await finalizeDeck(adminClient, deckNoUser, qaPairs, noteId);
+            }
+        }
+
+        return { error: `Failed to create deck: ${insertDeckError?.message || "Unknown database error"}` };
+    }
+
+    return await finalizeDeck(adminClient, deck, qaPairs, noteId);
+}
+
+async function finalizeDeck(adminClient: any, deck: any, qaPairs: any[], noteId: number) {
+    const cards = qaPairs.map((p) => ({
+        deck_id: deck.id,
+        question: p.q,
+        answer: p.a,
+    }));
+
+    const { error: insertCardsError } = await adminClient
+        .from("flashcards")
+        .insert(cards);
+
+    if (insertCardsError) {
+        console.error("error inserting cards", JSON.stringify(insertCardsError, null, 2));
+        return { error: "Failed to insert cards" };
+    }
+
+    revalidatePath(`/notes/${noteId}`);
+    return { deck };
 }
