@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { createGroup, joinGroup, fetchUserGroups, fetchAllGroups } from "./actions";
+import Link from "next/link";
+import { fetchUserGroups, fetchAllGroups } from "./actions";
 import { useRouter } from "next/navigation";
-import { Users, Plus, Key, LogIn, MessageSquare, BookOpen, Crown, User, Search, Globe, Shield } from "lucide-react";
+import { Users, Plus, LogIn, MessageSquare, BookOpen, Crown, User, Search, Globe, Shield } from "lucide-react";
 
 interface GroupMember {
   user_id: string;
@@ -43,23 +44,16 @@ function GroupsSkeleton() {
 }
 
 export default function GroupsPage() {
-  const [name, setName] = useState("");
-  const [password, setPassword] = useState("");
-  const [inviteCode, setInviteCode] = useState("");
-  const [joinPass, setJoinPass] = useState("");
   const [groups, setGroups] = useState<Group[]>([]);
   const [allGroups, setAllGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [creating, setCreating] = useState(false);
-  const [joining, setJoining] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState<"my" | "discover">("my");
 
   const router = useRouter();
 
-  async function loadGroups(showLoading = true) {
-    if (showLoading) setLoading(true);
+  async function loadGroups() {
+    setLoading(true);
     const [userData, allData] = await Promise.all([
       fetchUserGroups(),
       fetchAllGroups()
@@ -70,37 +64,8 @@ export default function GroupsPage() {
   }
 
   useEffect(() => {
-    // Initial load, loading is already true
-    loadGroups(false);
+    loadGroups();
   }, []);
-
-  const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    setCreating(true);
-    const res = await createGroup(name, password);
-    if (res.error) setError(res.error);
-    else {
-      setName("");
-      setPassword("");
-      loadGroups(true);
-    }
-    setCreating(false);
-  };
-
-  const handleJoin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    setJoining(true);
-    const res = await joinGroup(inviteCode, joinPass);
-    if (res.error) setError(res.error);
-    else {
-      setInviteCode("");
-      setJoinPass("");
-      loadGroups(true);
-    }
-    setJoining(false);
-  };
 
   const filteredMyGroups = groups.filter(g =>
     g.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -139,19 +104,15 @@ export default function GroupsPage() {
         </div>
       </div>
 
-      {error && (
-        <div className="mb-6 p-4 bg-red-50 text-red-700 rounded-xl border border-red-200 text-sm font-medium">
-          {error}
-        </div>
-      )}
+
 
       {/* Tabs */}
       <div className="flex gap-2 mb-8 p-1 bg-muted/10 w-fit rounded-xl border border-muted/10">
         <button
           onClick={() => setActiveTab("my")}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === "my"
-              ? "bg-card text-primary shadow-sm"
-              : "text-primary/60 hover:text-primary hover:bg-muted/5"
+            ? "bg-card text-primary shadow-sm"
+            : "text-primary/60 hover:text-primary hover:bg-muted/5"
             }`}
         >
           <Users className="w-4 h-4" /> My Groups ({groups.length})
@@ -159,8 +120,8 @@ export default function GroupsPage() {
         <button
           onClick={() => setActiveTab("discover")}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === "discover"
-              ? "bg-card text-primary shadow-sm"
-              : "text-primary/60 hover:text-primary hover:bg-muted/5"
+            ? "bg-card text-primary shadow-sm"
+            : "text-primary/60 hover:text-primary hover:bg-muted/5"
             }`}
         >
           <Globe className="w-4 h-4" /> Discover ({filteredDiscoverGroups.length})
@@ -168,88 +129,21 @@ export default function GroupsPage() {
       </div>
 
       {activeTab === "my" ? (
-        <div className="space-y-12">
-          {/* Creation/Join Forms Row */}
-          <div className="grid md:grid-cols-2 gap-8">
-            {/* Create Group */}
-            <div className="bg-card p-6 md:p-8 rounded-2xl shadow-subtle border border-muted/20">
-              <div className="flex items-center gap-2 mb-6 text-primary">
-                <Plus className="w-6 h-6" />
-                <h2 className="text-xl font-bold tracking-tight">Create a Group</h2>
-              </div>
-              <form onSubmit={handleCreate} className="space-y-4">
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-primary/60 uppercase tracking-wider">Group Name</label>
-                  <input
-                    required
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="e.g. Calculus 101"
-                    className="w-full border border-muted/40 bg-background/50 rounded-xl px-4 py-2.5 text-primary placeholder:text-muted focus:ring-2 focus:ring-accent focus:border-accent outline-none transition-all"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-primary/60 uppercase tracking-wider">Password <span className="text-primary/40 normal-case tracking-normal">(Optional)</span></label>
-                  <div className="relative">
-                    <Key className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary/40" />
-                    <input
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="Leave blank for open group"
-                      type="password"
-                      className="w-full border border-muted/40 bg-background/50 rounded-xl pl-9 pr-4 py-2.5 text-primary placeholder:text-muted focus:ring-2 focus:ring-accent focus:border-accent outline-none transition-all"
-                    />
-                  </div>
-                </div>
-                <button
-                  type="submit"
-                  disabled={creating}
-                  className="w-full bg-primary hover:bg-primary/90 text-white font-medium py-3 rounded-xl shadow-sm transition-all disabled:opacity-50 flex justify-center items-center mt-2"
-                >
-                  {creating ? <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : "Create Group"}
-                </button>
-              </form>
-            </div>
-
-            {/* Join Group */}
-            <div className="bg-card p-6 md:p-8 rounded-2xl shadow-subtle border border-muted/20">
-              <div className="flex items-center gap-2 mb-6 text-primary">
-                <LogIn className="w-6 h-6" />
-                <h2 className="text-xl font-bold tracking-tight">Join a Group</h2>
-              </div>
-              <form onSubmit={handleJoin} className="space-y-4">
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-primary/60 uppercase tracking-wider">Invite Code</label>
-                  <input
-                    required
-                    value={inviteCode}
-                    onChange={(e) => setInviteCode(e.target.value)}
-                    placeholder="8-character code"
-                    className="w-full border border-muted/40 bg-background/50 rounded-xl px-4 py-2.5 text-primary font-mono placeholder:text-muted placeholder:font-sans focus:ring-2 focus:ring-accent focus:border-accent outline-none transition-all"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-primary/60 uppercase tracking-wider">Password <span className="text-primary/40 normal-case tracking-normal">(If required)</span></label>
-                  <div className="relative">
-                    <Key className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary/40" />
-                    <input
-                      value={joinPass}
-                      onChange={(e) => setJoinPass(e.target.value)}
-                      placeholder="Group password"
-                      type="password"
-                      className="w-full border border-muted/40 bg-background/50 rounded-xl pl-9 pr-4 py-2.5 text-primary placeholder:text-muted focus:ring-2 focus:ring-accent focus:border-accent outline-none transition-all"
-                    />
-                  </div>
-                </div>
-                <button
-                  type="submit"
-                  disabled={joining}
-                  className="w-full bg-accent hover:bg-accent/90 text-primary font-medium py-3 rounded-xl shadow-sm transition-all disabled:opacity-50 flex justify-center items-center mt-2"
-                >
-                  {joining ? <span className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" /> : "Join Group"}
-                </button>
-              </form>
-            </div>
+        <div className="space-y-6">
+          {/* Action Buttons */}
+          <div className="flex gap-3">
+            <Link
+              href="/groups/create"
+              className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-background text-sm font-semibold px-5 py-2.5 rounded-xl shadow-sm transition-all"
+            >
+              <Plus className="w-4 h-4" /> Create Group
+            </Link>
+            <Link
+              href="/groups/join"
+              className="flex items-center gap-2 bg-card border border-muted/30 hover:bg-muted/10 text-primary text-sm font-semibold px-5 py-2.5 rounded-xl transition-all"
+            >
+              <LogIn className="w-4 h-4" /> Join a Group
+            </Link>
           </div>
 
           <div id="my-groups">
@@ -334,12 +228,8 @@ export default function GroupsPage() {
 
                   <div className="p-4 pt-0">
                     <button
-                      onClick={() => {
-                        setInviteCode(g.invite_code);
-                        setActiveTab("my");
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                      }}
-                      className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-white text-sm font-semibold py-2.5 rounded-xl transition-all shadow-sm"
+                      onClick={() => router.push(`/groups/join?code=${g.invite_code}`)}
+                      className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-background text-sm font-semibold py-2.5 rounded-xl transition-all shadow-sm"
                     >
                       <LogIn className="w-4 h-4" /> Ready to Join
                     </button>
@@ -403,18 +293,18 @@ function GroupCard({ g, router }: { g: Group, router: any }) {
         </div>
       </div>
 
-      <div className="flex border-t border-muted/10 divide-x divide-muted/10">
+      <div className="p-4 pt-0 space-y-2">
         <button
           onClick={() => router.push(`/groups/${g.id}`)}
-          className="flex-1 flex items-center justify-center gap-2 bg-muted/5 hover:bg-muted/10 text-primary text-sm font-medium py-3.5 transition-colors"
+          className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-background text-sm font-semibold py-3 rounded-xl transition-all shadow-sm"
         >
-          <MessageSquare className="w-4 h-4" /> Room
+          <MessageSquare className="w-4 h-4" /> Enter Room
         </button>
         <button
           onClick={() => router.push(`/dashboard?group=${g.id}`)}
-          className="flex-1 flex items-center justify-center gap-2 bg-muted/5 hover:bg-muted/10 text-primary text-sm font-medium py-3.5 transition-colors"
+          className="w-full flex items-center justify-center gap-2 text-primary/60 hover:text-primary hover:bg-muted/10 text-sm font-medium py-2 rounded-xl transition-all"
         >
-          <BookOpen className="w-4 h-4" /> Notes
+          <BookOpen className="w-4 h-4" /> View Group Notes
         </button>
       </div>
     </div>

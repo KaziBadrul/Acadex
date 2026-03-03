@@ -481,30 +481,59 @@ function DashboardContent() {
       ) : (
         <div className="flex flex-col items-center justify-center p-16 text-center bg-card rounded-2xl border border-muted/20 border-dashed">
           <div className="w-16 h-16 bg-muted/10 rounded-2xl flex items-center justify-center mb-4 text-primary/40">
-            <FileText className="w-8 h-8" />
+            <BookOpen className="w-8 h-8" />
           </div>
-          <h3 className="text-xl font-semibold text-primary mb-2">No notes found</h3>
-          <p className="text-primary/60 max-w-sm mb-6">
-            We couldn&apos;t find any notes matching your current filters and search.
-          </p>
-          <div className="flex gap-4">
-            <button
-              onClick={() => {
-                setSearch("");
-                setFilter("all");
-                setVisibilityFilter("all");
-              }}
-              className="px-4 py-2 font-medium text-sm text-primary hover:bg-muted/10 rounded-xl transition-all"
-            >
-              Clear filters
-            </button>
-            <Link
-              href="/upload"
-              className="px-4 py-2 bg-primary hover:bg-primary/90 text-white font-medium text-sm rounded-xl shadow-sm transition-all"
-            >
-              Upload a Note
-            </Link>
-          </div>
+
+          {groupFilter ? (
+            <>
+              <h3 className="text-xl font-bold text-primary mb-2">No notes in this group</h3>
+              <p className="text-primary/60 max-w-sm mb-8">
+                {groupDetail
+                  ? `${groupDetail.name} doesn't have any shared notes yet. Start the collaboration!`
+                  : "This group doesn't have any shared notes yet."}
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Link
+                  href={`/notes/create?group=${groupFilter}`}
+                  className="flex items-center justify-center gap-2 px-6 py-3 bg-primary hover:bg-primary/90 text-background font-bold rounded-xl shadow-sm transition-all"
+                >
+                  <Plus className="w-5 h-5" /> Write a Note
+                </Link>
+                <Link
+                  href="/notes/upload"
+                  className="flex items-center justify-center gap-2 px-6 py-3 bg-card border border-muted/30 hover:bg-muted/10 text-primary font-bold rounded-xl transition-all"
+                >
+                  <Upload className="w-5 h-5" /> Import PDF
+                </Link>
+              </div>
+            </>
+          ) : (
+            <>
+              <h3 className="text-xl font-semibold text-primary mb-2">No notes found</h3>
+              <p className="text-primary/60 max-w-sm mb-6">
+                We couldn&apos;t find any notes matching your current filters and search.
+              </p>
+              <div className="flex gap-4">
+                <button
+                  onClick={() => {
+                    setSearch("");
+                    setFilter("all");
+                    setVisibilityFilter("all");
+                    router.push("/dashboard");
+                  }}
+                  className="px-4 py-2 font-medium text-sm text-primary hover:bg-muted/10 rounded-xl transition-all"
+                >
+                  Clear filters
+                </button>
+                <Link
+                  href="/notes/create"
+                  className="px-4 py-2 bg-primary hover:bg-primary/90 text-background font-medium text-sm rounded-xl shadow-sm transition-all"
+                >
+                  Create a Note
+                </Link>
+              </div>
+            </>
+          )}
         </div>
       )}
     </div>
