@@ -23,8 +23,8 @@ export async function generateQAFromText(text: string): Promise<QAPair[]> {
   if (process.env.GEMINI_API_ENDPOINT) {
     url = process.env.GEMINI_API_ENDPOINT;
   } else {
-    // try gemini-1.5-flash-latest as it often has better alias support
-    url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent";
+    // try gemini-2.5-flash since 1.5 isn't available for this API key
+    url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
   }
 
   // Ensure the URL has the API key attached at the end
@@ -32,9 +32,15 @@ export async function generateQAFromText(text: string): Promise<QAPair[]> {
     url = url.includes("?") ? `${url}&key=${apiKey}` : `${url}?key=${apiKey}`;
   }
 
-  const prompt = `Generate a JSON array of question/answer pairs from the following note text.
+  const prompt = `Generate a highly-polished, professional, and clean JSON array of flashcard question/answer pairs from the following note text.
 The output MUST be a JSON array where each object has "q" (the question) and "a" (the answer) keys.
-Keep questions concise and answers informative.
+
+STRICT Formatting Requirements:
+1. Questions MUST be written clearly as independent, standalone sentences. They must begin with a capital letter and end with a question mark (?).
+2. Answers MUST be clear, concise (max 2 sentences), and start with a capital letter.
+3. Remove ALL markdown formatting (like **bolding**, *italics*, # headers), bullet points, and emojis from both 'q' and 'a'. Use plain text only.
+4. Do NOT include prefixes like "Q:", "Question:", "A:", or "Answer:" inside the string values.
+5. Focus on overarching concepts and important details. The content must be extremely polished and professional.
 
 Note text:
 ${text}`;

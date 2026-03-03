@@ -269,6 +269,5 @@ async function finalizeDeck(adminClient: any, deck: any, qaPairs: any[], noteId:
         return { error: "Failed to insert cards" };
     }
 
-    revalidatePath(`/notes/${noteId}`);
     return { deck };
 }
