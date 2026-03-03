@@ -39,11 +39,11 @@ function GroupDetailSkeleton() {
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-1 space-y-6">
-                    <div className="h-64 bg-white rounded-2xl border border-muted/10 p-6"></div>
-                    <div className="h-32 bg-white rounded-2xl border border-muted/10 p-6"></div>
+                    <div className="h-64 bg-card rounded-2xl border border-muted/10 p-6"></div>
+                    <div className="h-32 bg-card rounded-2xl border border-muted/10 p-6"></div>
                 </div>
                 <div className="lg:col-span-2">
-                    <div className="h-[500px] bg-white rounded-2xl border border-muted/10 p-6"></div>
+                    <div className="h-[500px] bg-card rounded-2xl border border-muted/10 p-6"></div>
                 </div>
             </div>
         </div>
@@ -114,7 +114,7 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
 
     if (!group) {
         return (
-            <div className="flex flex-col items-center justify-center p-16 text-center bg-white rounded-2xl border border-muted/20 mt-10">
+            <div className="flex flex-col items-center justify-center p-16 text-center bg-card rounded-2xl border border-muted/20 mt-10">
                 <Users className="w-12 h-12 text-primary/40 mb-4" />
                 <h3 className="text-2xl font-semibold text-primary mb-2">Group not found</h3>
                 <p className="text-primary/60 mb-8 max-w-sm">The group you&apos;re looking for doesn&apos;t exist or you don&apos;t have access to it.</p>
@@ -150,7 +150,7 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
                 <div className="lg:col-span-1 space-y-6">
 
                     {/* Group Info Widget */}
-                    <div className="bg-white p-6 rounded-2xl shadow-subtle border border-muted/20">
+                    <div className="bg-card p-6 rounded-2xl shadow-subtle border border-muted/20">
                         <div className="flex items-center gap-2 mb-4 text-primary">
                             <Key className="w-5 h-5" />
                             <h4 className="font-bold tracking-tight">Access Credentials</h4>
@@ -166,7 +166,7 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
                                         navigator.clipboard.writeText(group.invite_code);
                                         alert("Invite code copied!");
                                     }}
-                                    className="p-2 text-primary/60 hover:text-primary hover:bg-white rounded-lg transition-all"
+                                    className="p-2 text-primary/60 hover:text-primary hover:bg-card rounded-lg transition-all"
                                     title="Copy Invite Code"
                                 >
                                     <Copy className="w-4 h-4" />
@@ -177,7 +177,7 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
                     </div>
 
                     {/* Members Section */}
-                    <div className="bg-white p-6 rounded-2xl shadow-subtle border border-muted/20">
+                    <div className="bg-card p-6 rounded-2xl shadow-subtle border border-muted/20">
                         <div className="flex items-center justify-between mb-6">
                             <h2 className="text-xl font-bold text-primary tracking-tight flex items-center gap-2">
                                 <Users className="w-5 h-5" /> Members
@@ -231,7 +231,7 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
 
                 {/* Right Column: Virtual Study Room (Messenger) */}
                 <div className="lg:col-span-2">
-                    <div className="bg-white rounded-2xl shadow-subtle border border-muted/20 h-[600px] overflow-hidden flex flex-col">
+                    <div className="bg-card rounded-2xl shadow-subtle border border-muted/20 h-[600px] overflow-hidden flex flex-col">
                         <div className="p-4 border-b border-muted/20 bg-muted/5">
                             <h3 className="font-bold text-primary">virtual study room</h3>
                             <p className="text-xs text-primary/50">Discuss notes and topics with {group.name}</p>

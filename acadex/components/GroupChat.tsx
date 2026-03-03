@@ -145,7 +145,7 @@ export default function GroupChat({ groupId, currentUserId }: GroupChatProps) {
                                 )}
                                 <div
                                     className={`max-w-[75%] px-4 py-2.5 text-sm shadow-sm transition-all relative ${isMe
-                                        ? "bg-primary text-white rounded-2xl rounded-tr-sm"
+                                        ? "bg-primary text-background rounded-2xl rounded-tr-sm"
                                         : "bg-card text-primary border border-muted/20 rounded-2xl rounded-tl-sm"
                                         }`}
                                 >
