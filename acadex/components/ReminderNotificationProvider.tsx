@@ -66,54 +66,42 @@ export default function ReminderNotificationProvider({
                 .order("remind_at", { ascending: true });
 
             if (error) {
-                console.error("Error fetching reminders:", error);
-                setIsChecking(false);
+                // eslint-disable-next-line no-console
+                console.warn("Retrying reminders fetch due to error:", error.message);
                 return;
             }
 
-            if (!data || data.length === 0) {
-                setIsChecking(false);
-                return;
-            }
+            if (!data || data.length === 0) return;
 
             const now = new Date();
-            let found = false;
-
             for (const reminder of data as Reminder[]) {
                 if (dismissedIds.has(reminder.id)) continue;
 
                 const reminderDate = new Date(reminder.remind_at);
                 const diffMs = reminderDate.getTime() - now.getTime();
 
-                // CASE 1: Reminder is PASSED (or exactly now)
-                // We assume "passed" means within the last 24 hours (so we don't spam for year-old stuff)
+                // CASE 1: Reminder is PASSED (within last 24h)
                 if (diffMs <= 0) {
-                    // 24 hours in ms = 86400000
                     if (Math.abs(diffMs) < 86400000) {
                         setNotificationReminder({
                             ...reminder,
                             daysLeft: getDaysUntilReminder(reminder.remind_at)
                         });
-                        found = true;
                         break; // Show one at a time
                     }
                 }
 
                 // CASE 2: Reminder is VERY SOON (within 15 seconds)
-                // We set a precise timeout so the user sees it pop exactly when it's due
                 else if (diffMs < 15000) {
-                    console.log(`Setting precise timeout for reminder '${reminder.title}' in ${diffMs}ms`);
-
                     if (nextCheckTimeoutRef.current) clearTimeout(nextCheckTimeoutRef.current);
-
                     nextCheckTimeoutRef.current = setTimeout(() => {
-                        // Re-run check strictly when time is up
                         checkReminders();
-                    }, diffMs + 100); // 100ms buffer to ensure we pass the >= check
+                    }, diffMs + 100);
                 }
             }
         } catch (err) {
-            console.error("Error in checkReminders:", err);
+            // eslint-disable-next-line no-console
+            console.error("Critical error in checkReminders:", err);
         } finally {
             setIsChecking(false);
         }

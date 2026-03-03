@@ -3,6 +3,18 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
+import Link from "next/link";
+import {
+  Clock,
+  Bell,
+  ArrowLeft,
+  Plus,
+  FileText,
+  Calendar,
+  AlertCircle,
+  CheckCircle2,
+  ShieldCheck
+} from "lucide-react";
 
 export default function SetReminderPage() {
   const supabase = createClient();
@@ -16,7 +28,7 @@ export default function SetReminderPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // 🔐 Auth check (same as Upload page)
+  // 🔐 Auth check
   useEffect(() => {
     async function checkAuth() {
       const {
@@ -45,8 +57,6 @@ export default function SetReminderPage() {
     setLoading(true);
     setError(null);
 
-    // Convert local datetime to ISO string with timezone offset
-    // This ensures that "21:00" local time is stored as the correct UTC instant
     const dateObj = new Date(remindAt);
     const isoString = dateObj.toISOString();
 
@@ -56,7 +66,7 @@ export default function SetReminderPage() {
       description,
       remind_at: isoString,
       priority,
-      is_public: true,
+      is_public: true, // Community sharing by default for this feature
     });
 
     setLoading(false);
@@ -64,69 +74,156 @@ export default function SetReminderPage() {
     if (insertError) {
       setError(insertError.message);
     } else {
-      setTitle("");
-      setDescription("");
-      setRemindAt("");
-      setPriority("medium");
-      alert("Reminder saved!");
+      router.push("/reminder");
     }
   }
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-gray-600">
-        Checking authentication…
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+          <p className="text-muted font-medium animate-pulse">Establishing Connection...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 text-gray-900 flex items-center justify-center p-6">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow p-6">
-        <h1 className="text-2xl font-semibold text-black mb-4">New Reminder</h1>
-
-        {error && <div className="mb-3 text-sm text-red-600">{error}</div>}
-
-        <input
-          className="w-full p-2 border rounded-lg mb-3 text-gray-900"
-          placeholder="Title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
-
-        <textarea
-          className="w-full p-2 border rounded-lg mb-3 text-gray-900"
-          placeholder="Notes (optional)"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-        />
-
-        <input
-          type="datetime-local"
-          className="w-full p-2 border rounded-lg mb-3 text-gray-900"
-          value={remindAt}
-          onChange={(e) => setRemindAt(e.target.value)}
-        />
-
-        <select
-          className="w-full p-2 border rounded-lg mb-4 text-gray-900 bg-white"
-          value={priority}
-          onChange={(e) =>
-            setPriority(e.target.value as "low" | "medium" | "high")
-          }
+    <main className="max-w-2xl mx-auto px-4 py-8 md:py-16 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      {/* Header Section */}
+      <div className="mb-12 space-y-4 text-center">
+        <Link
+          href="/reminder"
+          className="inline-flex items-center gap-2 text-muted hover:text-primary font-bold text-sm transition-all group"
         >
-          <option value="low">Low priority</option>
-          <option value="medium">Medium priority</option>
-          <option value="high">High priority</option>
-        </select>
+          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+          <span>Back to Community Board</span>
+        </Link>
 
-        <button
-          onClick={saveReminder}
-          disabled={loading}
-          className="w-full bg-black text-white py-2 rounded-lg hover:bg-gray-800 disabled:opacity-50"
-        >
-          {loading ? "Saving…" : "Save Reminder"}
-        </button>
+        <div className="space-y-2">
+          <h1 className="text-4xl md:text-5xl font-black tracking-tight text-primary">
+            Set Reminder
+          </h1>
+          <p className="text-muted font-medium">
+            Share a deadline or study goal with the entire community.
+          </p>
+        </div>
+      </div>
+
+      {/* Form Section */}
+      <div className="bg-card border border-muted/20 p-8 rounded-[2.5rem] shadow-2xl shadow-primary/5 relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+
+        <form className="space-y-8" onSubmit={(e) => { e.preventDefault(); saveReminder(); }}>
+          {/* Title Input */}
+          <div className="space-y-2">
+            <label className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-primary/40 ml-1">
+              <Bell className="w-3 h-3" />
+              Reminder Title *
+            </label>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="e.g. Midterm Physics (Chapter 4-6)"
+              className="w-full bg-background/50 border border-muted/20 rounded-2xl p-5 font-bold text-primary focus:ring-4 focus:ring-primary/5 focus:border-primary/30 outline-none transition-all placeholder:text-muted/40"
+              required
+            />
+          </div>
+
+          {/* Description Input */}
+          <div className="space-y-2">
+            <label className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-primary/40 ml-1">
+              <FileText className="w-3 h-3" />
+              Short Description
+            </label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Add brief details for your classmates..."
+              rows={3}
+              className="w-full bg-background/50 border border-muted/20 rounded-2xl p-5 font-bold text-primary focus:ring-4 focus:ring-primary/5 focus:border-primary/30 outline-none transition-all placeholder:text-muted/40 resize-none"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Time Input */}
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-primary/40 ml-1">
+                <Calendar className="w-3 h-3" />
+                Deadline *
+              </label>
+              <input
+                type="datetime-local"
+                value={remindAt}
+                onChange={(e) => setRemindAt(e.target.value)}
+                className="w-full bg-background/50 border border-muted/20 rounded-2xl p-5 font-bold text-primary focus:ring-4 focus:ring-primary/5 focus:border-primary/30 outline-none transition-all"
+                required
+              />
+            </div>
+
+            {/* Priority Selection */}
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-primary/40 ml-1">
+                <ShieldCheck className="w-3 h-3" />
+                Priority
+              </label>
+              <select
+                value={priority}
+                onChange={(e) => setPriority(e.target.value as "low" | "medium" | "high")}
+                className="w-full bg-background/50 border border-muted/20 rounded-2xl p-5 font-bold text-primary focus:ring-4 focus:ring-primary/5 focus:border-primary/30 outline-none transition-all appearance-none cursor-pointer"
+              >
+                <option value="low">Low Priority</option>
+                <option value="medium">Medium Priority</option>
+                <option value="high">High Priority</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Error Display */}
+          {error && (
+            <div className="flex items-center gap-3 p-4 bg-red-500/5 border border-red-500/20 rounded-2xl animate-in shake">
+              <AlertCircle className="w-5 h-5 text-red-500 shrink-0" />
+              <p className="text-red-500 text-sm font-bold">{error}</p>
+            </div>
+          )}
+
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4 pt-4">
+            <button
+              type="button"
+              onClick={saveReminder}
+              disabled={loading}
+              className="flex-1 flex items-center justify-center gap-3 px-8 py-5 bg-primary text-background rounded-2xl font-black text-lg shadow-xl shadow-primary/10 hover:shadow-primary/20 hover:-translate-y-1 transition-all disabled:opacity-50 disabled:translate-y-0"
+            >
+              {loading ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-background/20 border-t-background rounded-full animate-spin"></div>
+                  <span>Posting...</span>
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="w-6 h-6" />
+                  <span>Post Reminder</span>
+                </>
+              )}
+            </button>
+
+            <Link
+              href="/reminder"
+              className="px-8 py-5 bg-card border border-muted/20 text-primary rounded-2xl font-black text-lg hover:bg-muted/5 transition-all text-center"
+            >
+              Cancel
+            </Link>
+          </div>
+        </form>
+      </div>
+
+      {/* Hint Section */}
+      <div className="mt-8 flex items-center justify-center gap-2 text-muted/30 font-bold text-[10px] uppercase tracking-widest text-center max-w-sm mx-auto">
+        <CheckCircle2 className="w-3 h-3 shrink-0" />
+        Community reminders are visible to all users to encourage collective focus.
       </div>
     </main>
   );
