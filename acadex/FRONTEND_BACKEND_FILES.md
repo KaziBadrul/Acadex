@@ -9,7 +9,7 @@ This file lists which parts of the `acadex/` folder are frontend, backend, share
   - [acadex/app/globals.css](acadex/app/globals.css)
   - Pages (React UI):
     - [acadex/app/dashboard/page.tsx](acadex/app/dashboard/page.tsx)
-    - [acadex/app/zen/page.tsx](acadex/app/zen/page.tsx)
+    - [acadex/app/focus/page.tsx](acadex/app/focus/page.tsx)
     - [acadex/app/transcription/page.tsx](acadex/app/transcription/page.tsx)
     - [acadex/app/some/page.tsx](acadex/app/some/page.tsx)
     - [acadex/app/smart-snap/page.tsx](acadex/app/smart-snap/page.tsx)
@@ -25,7 +25,7 @@ This file lists which parts of the `acadex/` folder are frontend, backend, share
 
 - [acadex/components](acadex/components) : React components used by the pages (frontend UI)
   - Examples: [acadex/components/AppShell.tsx](acadex/components/AppShell.tsx), [acadex/components/NoteForm.tsx](acadex/components/NoteForm.tsx), [acadex/components/NotesFeed.tsx](acadex/components/NotesFeed.tsx), [acadex/components/CommentSection.tsx](acadex/components/CommentSection.tsx), [acadex/components/HandwritingPad.tsx](acadex/components/HandwritingPad.tsx)
-  - Subfolders: [acadex/components/nexus](acadex/components/nexus), [acadex/components/zen](acadex/components/zen), [acadex/components/smart-snap](acadex/components/smart-snap)
+  - Subfolders: [acadex/components/nexus](acadex/components/nexus), [acadex/components/smart-snap](acadex/components/smart-snap)
 
 - [acadex/public](acadex/public) : Static assets served to the browser (images, sw.js, uploads)
   - [acadex/public/sw.js](acadex/public/sw.js)
