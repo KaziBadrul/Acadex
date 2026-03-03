@@ -3,7 +3,7 @@
 import FlashcardStack from "./smart-snap/FlashcardStack";
 import { useRouter } from "next/navigation";
 import { Trash2, Loader2, ChevronLeft } from "lucide-react";
-import { deleteDeck } from "@/app/decks/actions";
+import { createClient } from "@/utils/supabase/client";
 import { useState } from "react";
 import Link from "next/link";
 
@@ -26,11 +26,17 @@ export default function DeckReview({ deckId, cards, backTo = "/" }: DeckReviewPr
   const handleDelete = async () => {
     if (!confirm("Are you sure you want to delete this entire deck?")) return;
     setIsDeleting(true);
-    const res = await deleteDeck(deckId);
-    if (res.success) {
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.from("flashcard_decks").delete().eq("id", deckId);
+      if (error) {
+        alert("Error deleting deck: " + error.message);
+        setIsDeleting(false);
+        return;
+      }
       router.push(backTo);
-    } else {
-      alert("Error deleting deck: " + res.error);
+    } catch (err: any) {
+      alert("Error deleting deck: " + (err?.message || String(err)));
       setIsDeleting(false);
     }
   };

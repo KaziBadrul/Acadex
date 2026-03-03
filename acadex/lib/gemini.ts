@@ -84,19 +84,100 @@ ${text}`;
     try {
       // Defensive parsing: LLMs sometimes wrap JSON in markdown code blocks
       let cleanOutput = textOutput.trim();
+
+      // Normalize smart quotes
+      cleanOutput = cleanOutput.replace(/[“”]/g, '"').replace(/[‘’]/g, "'");
+
+      // If there's a fenced code block, try to extract the JSON portion
       if (cleanOutput.startsWith("```")) {
-        // Find the broad start and end of the JSON structure
         const firstBracket = cleanOutput.indexOf("[");
         const lastBracket = cleanOutput.lastIndexOf("]");
-        if (firstBracket !== -1 && lastBracket !== -1) {
+        if (firstBracket !== -1 && lastBracket !== -1 && lastBracket > firstBracket) {
           cleanOutput = cleanOutput.substring(firstBracket, lastBracket + 1);
         } else {
-          // Fallback simple regex if brackets aren't found
           cleanOutput = cleanOutput.replace(/```(json)?/g, "").trim();
         }
       }
 
-      const parsed = JSON.parse(cleanOutput);
+      // Attempt to robustly extract the first top-level JSON array while
+      // respecting quoted strings (so we don't mistake brackets inside strings).
+      function extractTopLevelArray(s: string) {
+        const start = s.indexOf('[');
+        if (start === -1) return s;
+        let inString = false;
+        let escape = false;
+        let depth = 0;
+        for (let i = start; i < s.length; i++) {
+          const ch = s[i];
+          if (inString) {
+            if (escape) {
+              escape = false;
+            } else if (ch === '\\') {
+              escape = true;
+            } else if (ch === '"') {
+              inString = false;
+            }
+          } else {
+            if (ch === '"') {
+              inString = true;
+            } else if (ch === '[') {
+              depth++;
+            } else if (ch === ']') {
+              depth--;
+              if (depth === 0) {
+                return s.substring(start, i + 1);
+              }
+            }
+          }
+        }
+        // fallback to original string if we couldn't find a balanced array
+        return s;
+      }
+
+      let candidate = extractTopLevelArray(cleanOutput);
+
+      // Sanitize candidate by escaping literal unescaped newlines inside JSON strings
+      function sanitizeJSONString(s: string) {
+        let out = '';
+        let inString = false;
+        let escape = false;
+        for (let i = 0; i < s.length; i++) {
+          const ch = s[i];
+          if (inString) {
+            if (escape) {
+              out += ch;
+              escape = false;
+            } else if (ch === '\\') {
+              out += ch;
+              escape = true;
+            } else if (ch === '"') {
+              out += ch;
+              inString = false;
+            } else if (ch === '\n') {
+              out += '\\n';
+            } else if (ch === '\r') {
+              out += '\\r';
+            } else if (ch === '\t') {
+              out += '\\t';
+            } else {
+              out += ch;
+            }
+          } else {
+            out += ch;
+            if (ch === '"') {
+              inString = true;
+            }
+          }
+        }
+        return out;
+      }
+
+      candidate = sanitizeJSONString(candidate);
+
+      // Remove trailing commas before closing objects/arrays which LLMs sometimes insert
+      candidate = candidate.replace(/,\s*(\]|\})/g, '$1');
+
+      const parsed = JSON.parse(candidate);
       if (Array.isArray(parsed)) {
         return parsed as QAPair[];
       }
