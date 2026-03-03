@@ -5,6 +5,7 @@ import ThemeProvider from "@/components/theme-provider";
 import ReminderNotificationProvider from "@/components/ReminderNotificationProvider";
 import AppShell from "@/components/AppShell";
 import PwaRegistration from "@/components/PwaRegistration";
+import { FocusProvider } from "@/components/focus/FocusContext";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -48,11 +49,13 @@ export default function RootLayout({
       </head>
       <body className={`${inter.variable} font-sans antialiased text-[#1E2A38]`}>
         <ThemeProvider>
-          <ReminderNotificationProvider>
-            <AppShell>
-              {children}
-            </AppShell>
-          </ReminderNotificationProvider>
+          <FocusProvider>
+            <ReminderNotificationProvider>
+              <AppShell>
+                {children}
+              </AppShell>
+            </ReminderNotificationProvider>
+          </FocusProvider>
           <PwaRegistration />
         </ThemeProvider>
       </body>

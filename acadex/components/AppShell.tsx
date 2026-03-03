@@ -17,6 +17,7 @@ import {
     ChevronRight,
 } from "lucide-react";
 import { useState } from "react";
+import FocusWidget from "./focus/FocusWidget";
 
 const SIDEBAR_ITEMS = [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -125,7 +126,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             </aside>
 
             {/* Main Content Area */}
-            <main className="flex-1 flex flex-col min-w-0 min-h-screen pt-16 md:pt-0 overflow-x-hidden">
+            <main className="flex-1 flex flex-col min-w-0 min-h-screen pt-16 md:pt-0 overflow-x-hidden relative">
+                <FocusWidget />
                 <div className="flex-1 p-4 md:p-8 max-w-7xl mx-auto w-full">
                     {children}
                 </div>
