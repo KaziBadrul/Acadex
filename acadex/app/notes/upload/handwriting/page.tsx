@@ -63,7 +63,7 @@ export default function Handwriting() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-6">
       <div className="w-full max-w-xl bg-card p-10 rounded-xl shadow-2xl">
         <h1 className="text-4xl font-extrabold text-blue-700 mb-4 text-center">
-          Handwriting â†’ Text
+          Handwriting to Text
         </h1>
 
         <p className="text-gray-600 text-center mb-8">
@@ -134,10 +134,9 @@ export default function Handwriting() {
             type="submit"
             disabled={loading}
             className={`w-full py-3 px-6 text-white font-semibold rounded-lg shadow-md transition duration-300
-              ${
-                loading
-                  ? "bg-gray-400 cursor-not-allowed"
-                  : "bg-blue-500 hover:bg-blue-600"
+              ${loading
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-blue-500 hover:bg-blue-600"
               }`}
           >
             {loading ? "Extractingâ€¦" : "Extract Text & Save"}
